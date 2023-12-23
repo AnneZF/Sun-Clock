@@ -1,0 +1,311 @@
+menu "WiFi Configuration"
+
+    config ESP_WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            SSID (network name) for the example to connect to.
+
+    config ESP_WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        help
+            WiFi password (WPA or WPA2) for the example to use.
+
+    choice ESP_WIFI_SAE_MODE
+        prompt "WPA3 SAE mode selection"
+        default ESP_WPA3_SAE_PWE_BOTH
+        help
+            Select mode for SAE as Hunt and Peck, H2E or both.
+        config ESP_WPA3_SAE_PWE_HUNT_AND_PECK
+            bool "HUNT AND PECK"
+        config ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT
+            bool "H2E"
+        config ESP_WPA3_SAE_PWE_BOTH
+            bool "BOTH"
+    endchoice
+
+    config ESP_WIFI_PW_ID
+        string "PASSWORD IDENTIFIER"
+        depends on  ESP_WPA3_SAE_PWE_HASH_TO_ELEMENT|| ESP_WPA3_SAE_PWE_BOTH
+        default ""
+        help
+            password identifier for SAE H2E
+
+    config ESP_MAXIMUM_RETRY
+        int "Maximum retry"
+        default 5
+        help
+            Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+
+    choice ESP_WIFI_SCAN_AUTH_MODE_THRESHOLD
+        prompt "WiFi Scan auth mode threshold"
+        default ESP_WIFI_AUTH_WPA2_PSK
+        help
+            The weakest authmode to accept in the scan mode.
+            This value defaults to ESP_WIFI_AUTH_WPA2_PSK incase password is present and ESP_WIFI_AUTH_OPEN is used.
+            Please select ESP_WIFI_AUTH_WEP/ESP_WIFI_AUTH_WPA_PSK incase AP is operating in WEP/WPA mode.
+
+        config ESP_WIFI_AUTH_OPEN
+            bool "OPEN"
+        config ESP_WIFI_AUTH_WEP
+            bool "WEP"
+        config ESP_WIFI_AUTH_WPA_PSK
+            bool "WPA PSK"
+        config ESP_WIFI_AUTH_WPA2_PSK
+            bool "WPA2 PSK"
+        config ESP_WIFI_AUTH_WPA_WPA2_PSK
+            bool "WPA/WPA2 PSK"
+        config ESP_WIFI_AUTH_WPA3_PSK
+            bool "WPA3 PSK"
+        config ESP_WIFI_AUTH_WPA2_WPA3_PSK
+            bool "WPA2/WPA3 PSK"
+        config ESP_WIFI_AUTH_WAPI_PSK
+            bool "WAPI PSK"
+    endchoice
+
+endmenu
+
+menu "Date/Time Configuration"
+
+    config ESP_TIMEZONE
+        string "Time Zone"
+        default ""
+        help
+            See "https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv" for list of setenv configurations by country.
+
+    config ESP_SNTP_UPDATE_INTERVAL
+        int "SNTP Update Interval (hours)"
+        default 1
+        help
+            "Frequency at which device polls for time from server"
+
+    config ESP_LONGITUDE
+        string "Longitude"
+        default ""
+    
+    config ESP_LATITUDE
+        string "Latitude"
+        default ""
+endmenu
+
+menu "LED Strip Configuration"
+
+    config ESP_LED_STRIP_GPIO_NUM
+        int "LED Strip GPIO Number"
+        default 16
+        help 
+            Connecter for middle pin of WS2812
+    
+    config ESP_LED_STRIP_RESOLUTION
+        int "LED Strip Resolution (Hz)"
+        default 10000000
+        help
+            LED strip needs a high resolution.
+
+    config ESP_LED_NUMBERS
+        int "Number of LEDs"
+        default 1
+        help
+            Number of LEDs available on strip
+    
+endmenu
+
+menu "Alarm Times"
+    menu "Sunday"
+        menu "Wake"
+            config ESP_ALARM_0_0_0
+                int "Hour"
+                default 8
+
+            config ESP_ALARM_0_0_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_0_0_2
+                int "Second"
+                default 0
+            endmenu
+        menu "Sleep"
+            config ESP_ALARM_0_1_0
+                int "Hour"
+                default 22
+
+            config ESP_ALARM_0_1_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_0_1_2
+                int "Second"
+                default 0
+            endmenu
+    endmenu
+    menu "Monday"
+        menu "Wake"
+            config ESP_ALARM_1_0_0
+                int "Hour"
+                default 8
+
+            config ESP_ALARM_1_0_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_1_0_2
+                int "Second"
+                default 0
+            endmenu
+        menu "Sleep"
+            config ESP_ALARM_1_1_0
+                int "Hour"
+                default 22
+
+            config ESP_ALARM_1_1_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_1_1_2
+                int "Second"
+                default 0
+            endmenu
+    endmenu
+    menu "Tuesday"
+        menu "Wake"
+            config ESP_ALARM_2_0_0
+                int "Hour"
+                default 8
+
+            config ESP_ALARM_2_0_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_2_0_2
+                int "Second"
+                default 0
+            endmenu
+        menu "Sleep"
+            config ESP_ALARM_2_1_0
+                int "Hour"
+                default 22
+
+            config ESP_ALARM_2_1_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_2_1_2
+                int "Second"
+                default 0
+            endmenu
+    endmenu
+    menu "Wednesday"
+        menu "Wake"
+            config ESP_ALARM_3_0_0
+                int "Hour"
+                default 8
+
+            config ESP_ALARM_3_0_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_3_0_2
+                int "Second"
+                default 0
+            endmenu
+        menu "Sleep"
+            config ESP_ALARM_3_1_0
+                int "Hour"
+                default 22
+
+            config ESP_ALARM_3_1_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_3_1_2
+                int "Second"
+                default 0
+            endmenu
+    endmenu
+    menu "Thursday"
+        menu "Wake"
+            config ESP_ALARM_4_0_0
+                int "Hour"
+                default 8
+
+            config ESP_ALARM_4_0_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_4_0_2
+                int "Second"
+                default 0
+            endmenu
+        menu "Sleep"
+            config ESP_ALARM_4_1_0
+                int "Hour"
+                default 22
+
+            config ESP_ALARM_4_1_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_4_1_2
+                int "Second"
+                default 0
+            endmenu
+    endmenu
+    menu "Friday"
+        menu "Wake"
+            config ESP_ALARM_5_0_0
+                int "Hour"
+                default 8
+
+            config ESP_ALARM_5_0_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_5_0_2
+                int "Second"
+                default 0
+            endmenu
+        menu "Sleep"
+            config ESP_ALARM_5_1_0
+                int "Hour"
+                default 22
+
+            config ESP_ALARM_5_1_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_5_1_2
+                int "Second"
+                default 0
+            endmenu
+    endmenu
+    menu "Saturday"
+        menu "Wake"
+            config ESP_ALARM_6_0_0
+                int "Hour"
+                default 8
+
+            config ESP_ALARM_6_0_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_6_0_2
+                int "Second"
+                default 0
+            endmenu
+        menu "Sleep"
+            config ESP_ALARM_6_1_0
+                int "Hour"
+                default 22
+
+            config ESP_ALARM_6_1_1
+                int "Minute"
+                default 0
+
+            config ESP_ALARM_6_1_2
+                int "Second"
+                default 0
+            endmenu
+    endmenu
+endmenu
