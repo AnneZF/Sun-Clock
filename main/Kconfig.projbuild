@@ -91,14 +91,20 @@ endmenu
 
 menu "LED Strip Configuration"
 
+    config ESP_ONBOARD_LED_GPIO_NUM
+        int "Onboard LED GPIO number"
+        default 2
+        help 
+            See board's pinout diagram
+
     config ESP_LED_STRIP_GPIO_NUM
-        int "LED Strip GPIO Number"
+        int "LED strip GPIO number"
         default 16
         help 
             Connecter for middle pin of WS2812
     
     config ESP_LED_STRIP_RESOLUTION
-        int "LED Strip Resolution (Hz)"
+        int "LED strip resolution (Hz)"
         default 10000000
         help
             LED strip needs a high resolution.
@@ -109,6 +115,12 @@ menu "LED Strip Configuration"
         help
             Number of LEDs available on strip
     
+    config ESP_LED_REFRESH_MS
+        int "LED refresh rate (ms)"
+        default 100
+        help
+            ms between LED refresh
+
 endmenu
 
 menu "Alarm Times"

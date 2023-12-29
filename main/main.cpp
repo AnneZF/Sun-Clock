@@ -1,36 +1,5 @@
 #include "main.h"
 
-TaskHandle_t tickHandle;
-TaskHandle_t scheduleHandle;
-// Main Clock;
-
-// void Main::tick(void) {
-//     TickType_t start_time = xTaskGetTickCount();
-//     ESP_LOGI("Main Update", "%s", Sntp.timeNowAscii());
-//     vTaskDelayUntil(&start_time, pdMS_TO_TICKS(1000));
-
-//     // ESP_LOGI("Sunrise, Official", "%li", Sntp.msToSunEvent(true));
-//     // ESP_LOGI("Sunrise, Astronomical", "%li", Sntp.msToSunEvent(true, 108));
-//     // ESP_LOGI("Sunset, Official", "%li", Sntp.msToSunEvent(false));
-//     // ESP_LOGI("Sunset, Astronomical", "%li", Sntp.msToSunEvent(false, 108));
-// }
-
-int wakeTime[7][3] = {{CONFIG_ESP_ALARM_0_0_0, CONFIG_ESP_ALARM_0_0_1, CONFIG_ESP_ALARM_0_0_2},
-                      {CONFIG_ESP_ALARM_1_0_0, CONFIG_ESP_ALARM_1_0_1, CONFIG_ESP_ALARM_1_0_2},
-                      {CONFIG_ESP_ALARM_2_0_0, CONFIG_ESP_ALARM_2_0_1, CONFIG_ESP_ALARM_2_0_2},
-                      {CONFIG_ESP_ALARM_3_0_0, CONFIG_ESP_ALARM_3_0_1, CONFIG_ESP_ALARM_3_0_2},
-                      {CONFIG_ESP_ALARM_4_0_0, CONFIG_ESP_ALARM_4_0_1, CONFIG_ESP_ALARM_4_0_2},
-                      {CONFIG_ESP_ALARM_5_0_0, CONFIG_ESP_ALARM_5_0_1, CONFIG_ESP_ALARM_5_0_2},
-                      {CONFIG_ESP_ALARM_6_0_0, CONFIG_ESP_ALARM_6_0_1, CONFIG_ESP_ALARM_6_0_2}};
-
-int sleepTime[7][3] = {{CONFIG_ESP_ALARM_0_1_0, CONFIG_ESP_ALARM_0_1_1, CONFIG_ESP_ALARM_0_1_2},
-                       {CONFIG_ESP_ALARM_1_1_0, CONFIG_ESP_ALARM_1_1_1, CONFIG_ESP_ALARM_1_1_2},
-                       {CONFIG_ESP_ALARM_2_1_0, CONFIG_ESP_ALARM_2_1_1, CONFIG_ESP_ALARM_2_1_2},
-                       {CONFIG_ESP_ALARM_3_1_0, CONFIG_ESP_ALARM_3_1_1, CONFIG_ESP_ALARM_3_1_2},
-                       {CONFIG_ESP_ALARM_4_1_0, CONFIG_ESP_ALARM_4_1_1, CONFIG_ESP_ALARM_4_1_2},
-                       {CONFIG_ESP_ALARM_5_1_0, CONFIG_ESP_ALARM_5_1_1, CONFIG_ESP_ALARM_5_1_2},
-                       {CONFIG_ESP_ALARM_6_1_0, CONFIG_ESP_ALARM_6_1_1, CONFIG_ESP_ALARM_6_1_2}};
-
 void tick(void *pvParameter)
 {
     TickType_t startTime;
@@ -38,11 +7,12 @@ void tick(void *pvParameter)
     {
         startTime = xTaskGetTickCount();
         ESP_LOGI("Main Update", "%s", Sntp.timeNowAscii());
+        Led.blink();
         xTaskDelayUntil(&startTime, pdMS_TO_TICKS(1000));
     }
 }
 
-void setColourRange(void (*setter)(u_int16_t, float, float, float), float v0, float v1, float v2, float r0 = 0, float r1 = 0, float r2 = 0, int pixelStart = 0, int pixelEnd = LEDS)
+void setColourRange(void (*setter)(u_int16_t, float, float, float), float v0, float v1, float v2, float r0, float r1, float r2, int pixelStart, int pixelEnd)
 {
     float a0 = v0 - r0;
     float dA0 = (r0 * 2) / (pixelEnd - pixelStart);
@@ -62,8 +32,7 @@ void setColourRange(void (*setter)(u_int16_t, float, float, float), float v0, fl
 void sunriseStart(int ms)
 {
     TickType_t startTime;
-    int dT = 100;
-    float d = 1.0 * ms / dT;
+    float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
     float h = 240;
     float dH = 180.0 / d; // blue to yellow
     float l = 0.001;
@@ -73,103 +42,194 @@ void sunriseStart(int ms)
     for (int i = 0; i < d; i++)
     {
         startTime = xTaskGetTickCount();
-        setColourRange(&Led.setPixelHSL, h, 1, l, a);
-        Led.send();
+        setColourRange(&Leds.setPixelHSL, h, 1, l, a);
+        Leds.send();
         h += dH;
         l += dL;
         a += dA;
-        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(dT));
+        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
 
-    setColourRange(&Led.setPixelHSL, 0, 1, 1);
-    Led.send();
+    setColourRange(&Leds.setPixelHSL, 0, 1, 1);
+    Leds.send();
 }
 
 void sunriseEnd(int ms)
 {
     TickType_t startTime;
-    int dT = 100;
-    float d = 1.0 * ms / dT;
+    float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
     float v = 1;
     float dV = -0.999 / d;
     for (int i = 0; i < d; i++)
     {
         startTime = xTaskGetTickCount();
-        setColourRange(&Led.setPixelHSL, 0, v, v);
-        Led.send();
-        v -= dV;
-        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(dT));
+        setColourRange(&Leds.setPixelHSL, 0, v, v);
+        Leds.send();
+        v += dV;
+        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
 
-    Led.clear();
-    Led.send();
+    Leds.clear();
+    Leds.send();
 }
 
 void sunsetStart(int ms)
 {
     TickType_t startTime;
-    int dT = 100;
-    float d = 1.0 * ms / dT;
-    float h = 420;
-    float dH = -180.0 / d; // yellow to blue
+    float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
+    float h = 60;
+    float dH = 300.0 / d; // yellow to blue
     float l = 0.001;
-    float dL = 0.999 / d;
+    float dL = 0.949 / d;
     float a = 30;
-    float dA = 30.0 / d;
+    float dA = 45.0 / d;
     for (int i = 0; i < d; i++)
     {
         startTime = xTaskGetTickCount();
-        setColourRange(&Led.setPixelHSL, h, 1, l, a);
-        Led.send();
+        setColourRange(&Leds.setPixelHSL, h, 1, l, a);
+        Leds.send();
         h += dH;
         l += dL;
         a += dA;
-        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(dT));
+        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
 
-    setColourRange(&Led.setPixelHSL, 0, 1, 1);
-    Led.send();
+    // setColourRange(&Leds.setPixelHSL, 0, 1, 1);
+    // Leds.send();
 }
 
 void sunsetEnd(int ms)
 {
     TickType_t startTime;
-    float t2 = ms / 1000;
-    int dT = 100;
-    float d = 1.0 * ms / dT;
+    float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
     float h = 0;
-    float l = 1;
-    float a = 180;
-    float dA = -120.0 / d;
+    float l = 0.949;
+    float a = 75;
+    float dA = -45.0 / d;
     for (int i = 0; i < d; i++)
     {
         startTime = xTaskGetTickCount();
-        setColourRange(&Led.setPixelHSL, h, 1, l, a);
-        Led.send();
-        l = (sin(std::numbers::pi * i * dT / t2 + std::numbers::pi / 2) * (3 + sin(2 * std::numbers::pi * i * dT + std::numbers::pi / 2))) / 4;
+        setColourRange(&Leds.setPixelHSL, h, 1, l, a);
+        Leds.send();
+        l = 1.0 * (sin(M_PI * i * CONFIG_ESP_LED_REFRESH_MS / 2 / ms + M_PI / 2) * (3 + sin(2.0 * M_PI * i * CONFIG_ESP_LED_REFRESH_MS / 1000 + M_PI / 2))) / 4;
         a += dA;
-        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(dT));
+        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
 
-    Led.clear();
-    Led.send();
+    Leds.clear();
+    Leds.send();
+}
+
+int eventCalculator(int (&timeTo)[6])
+{
+    int wday = Sntp.getWDay();
+    timeTo[0] = Sntp.msToLocTime(wakeTime[wday][0], wakeTime[wday][1], wakeTime[wday][2]);
+    timeTo[1] = Sntp.msToSunEvent(true);
+    timeTo[2] = Sntp.msToSunEvent(false);
+    timeTo[3] = Sntp.msToSunEvent(false, false);
+    timeTo[4] = Sntp.msToLocTime(sleepTime[wday][0], sleepTime[wday][1], sleepTime[wday][2]);
+    timeTo[5] = Sntp.msToLocTime(2);
+
+    if (timeTo[1] - timeTo[0] < 30 * 60 * 1000)
+        timeTo[1] = timeTo[0];
+
+    timeTo[0] -= 30 * 60 * 1000;
+
+    if (timeTo[3] == -1)
+        timeTo[3] = timeTo[2] + 30 * 60 * 1000;
+
+    timeTo[4] -= 30 * 60 * 1000;
+
+    if (timeTo[5] < 0)
+        timeTo[5] = Sntp.msToLocTime(26);
+
+    ESP_LOGI("Calculated Schedule", "\n\nSunrise Start:\t%- 10i\nSunrise End:\t%- 10i\nSunset Start:\t%- 10i\nSunset Hold:\t%- 10i\nSunset End:\t%- 10i\nSleep:\t\t%- 10i", timeTo[0], timeTo[1], timeTo[2], timeTo[3], timeTo[4], timeTo[5]);
+
+    for (int i = 0; i < 6; i++)
+    {
+        if (timeTo[i] > 0)
+            return i;
+    }
+    return 6;
 }
 
 void eventScheduler(void *pvParameter)
 {
-    TickType_t startTime;
+    TickType_t startTime = xTaskGetTickCount();
+
+    int timeTo[6];
+    char eventNow = eventCalculator(timeTo);
+
+    switch (eventNow)
+    {
+    case SUNRISE_START:
+        xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[0]));
+        break;
+
+    case SUNRISE_END:
+        timeTo[0] = 0;
+        eventNow = SUNRISE_START;
+        break;
+
+    case SUNSET_START:
+        xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[2]));
+        break;
+
+    case SUNSET_HOLD:
+        timeTo[2] = 0;
+        eventNow = SUNSET_START;
+        break;
+
+    case SUNSET_END:
+        timeTo[2] = 0;
+        timeTo[3] = 5000;
+        eventNow = SUNSET_START;
+        break;
+
+    case SLEEP:
+        break;
+
+    default:
+        ESP_LOGE("Event Scheduler", "Cannot Find Correct Time. Restarting...");
+        esp_restart();
+        break;
+    }
+
     while (true)
     {
-        startTime = xTaskGetTickCount();
-        ESP_LOGI("Main", "scheduler");
-        sunsetStart(10000);
-        ESP_LOGI("Main", "scheduler");
-        xTaskDelayUntil(&startTime, pdMS_TO_TICKS(15000));
-        ESP_LOGI("Main", "scheduler");
-        startTime = xTaskGetTickCount();
-        ESP_LOGI("Main", "scheduler");
-        sunsetEnd(10000);
-        xTaskDelayUntil(&startTime, pdMS_TO_TICKS(15000));
+        switch (eventNow)
+        {
+        case SUNRISE_START:
+            ESP_LOGI("Scheduler", "Sunrise Start");
+            sunriseStart(timeTo[1] - timeTo[0]);
+
+        case SUNRISE_END:
+            ESP_LOGI("Scheduler", "Sunrise End");
+            sunriseEnd(30 * 60 * 1000);
+            xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[2]));
+
+        case SUNSET_START:
+            ESP_LOGI("Scheduler", "Sunset Start");
+            sunsetStart(timeTo[3] - timeTo[2]);
+
+        case SUNSET_HOLD:
+            ESP_LOGI("Scheduler", "Sunset Hold");
+            xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[4]));
+
+        case SUNSET_END:
+            ESP_LOGI("Scheduler", "Sunset End");
+            sunsetEnd(30 * 60 * 1000);
+            xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[5]));
+
+        case SLEEP:
+            ESP_LOGI("Scheduler", "Calculating times...");
+            startTime = xTaskGetTickCount();
+            eventNow = eventCalculator(timeTo);
+
+            ESP_LOGI("Scheduler", "Goodnight!");
+            xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[0]));
+            eventNow = SUNRISE_START;
+        }
     }
 }
 
@@ -178,8 +238,12 @@ void setup(void)
     esp_event_loop_create_default();
     if (!Led.ledState())
     {
-        ESP_LOGI("Main", "Initialising LED...");
         Led.init();
+    }
+    if (!Leds.ledState())
+    {
+        ESP_LOGI("Main", "Initialising LED...");
+        Leds.init();
     }
     nvs_flash_init();
     ESP_LOGI("Main", "Initialising WiFi...");

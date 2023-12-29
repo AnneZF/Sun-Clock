@@ -2,7 +2,6 @@
 
 namespace LED
 {
-
     bool Led::_running{false};
     rmt_channel_handle_t Led::_led_channel;
     rmt_encoder_handle_t Led::_led_encoder;
@@ -23,7 +22,7 @@ namespace LED
         size_t encoded_symbols = 0;
         switch (led_encoder->state)
         {
-        case 0: // send RGB data
+        case RMT_ENCODING_RESET: // send RGB data
             encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, primary_data, data_size, &session_state);
             if (session_state & RMT_ENCODING_COMPLETE)
             {
@@ -34,7 +33,7 @@ namespace LED
                 state |= RMT_ENCODING_MEM_FULL;
                 goto out; // yield if there's no free space for encoding artifacts
             }             // fall-through
-        case 1:           // send reset code
+        case RMT_ENCODING_COMPLETE:           // send reset code
             encoded_symbols += copy_encoder->encode(copy_encoder, channel, &led_encoder->reset_code,
                                                     sizeof(led_encoder->reset_code), &session_state);
             if (session_state & RMT_ENCODING_COMPLETE)
@@ -161,7 +160,7 @@ namespace LED
             clear();
             send();
             _running = true;
-            ESP_LOGI("LED", "Strip Initialised");
+            ESP_LOGI("LED Strip", "Initialised!");
         }
         return status;
     }

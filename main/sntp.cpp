@@ -7,7 +7,6 @@ namespace SNTP
 
     void Sntp::callbackOnNtpUpdate(timeval *tv)
     {
-        // ESP_LOGI("SNTP", "Time Elasped: %.fs", difftime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()), std::chrono::system_clock::to_time_t(_lastUpdate)));
         _lastUpdate = std::chrono::system_clock::now();
     }
 
@@ -35,7 +34,7 @@ namespace SNTP
 
             esp_sntp_init();
 
-            ESP_LOGI("SNTP", "SNTP Initialised.");
+            ESP_LOGI("SNTP", "Initialised.");
 
             while (SNTP_SYNC_STATUS_COMPLETED != sntp_get_sync_status())
             {
@@ -44,7 +43,7 @@ namespace SNTP
 
             _running = true;
 
-            ESP_LOGI("SNTP", "SNTP Synced.");
+            ESP_LOGI("SNTP", "Synced.");
         }
         return _running ? ESP_OK : ESP_FAIL;
     }
@@ -79,20 +78,39 @@ namespace SNTP
         return std::chrono::duration_cast<std::chrono::seconds>(timePointNow().time_since_epoch());
     }
 
+    double RAD(double x)
+    {
+        return x * M_PI / 180.0;
+    }
+
+    double DEG(double x)
+    {
+        return x * 180.0 / M_PI;
+    }
+
+    double LIM(double x, double y)
+    {
+        while (x > y)
+            x -= y;
+        while (x < 0)
+            x += y;
+        return x;
+    }
+
     [[nodiscard]] const char *Sntp::timeNowAscii()
     {
         const std::time_t timeNow{std::chrono::system_clock::to_time_t(timePointNow())};
         return std::asctime(std::localtime(&timeNow));
     }
 
-    double Sntp::getUTToSunEvent(bool isSunrise, float zenith, int dayOfYear)
+    [[nodiscard]] double Sntp::getUTToSunEvent(bool isSunrise, float zenith, int dayOfYear)
     {
         double longInHour = std::stod(CONFIG_ESP_LONGITUDE) / 15.0;
-        double time = dayOfYear + (1.0 * ((isSunrise ? 6 : 18) - longInHour) / 24);
+        double time = dayOfYear + ((isSunrise ? 6.0 : 18.0) - longInHour) / 24.0;
         double sunMeanAnom = (0.9856 * time) - 3.289;
         double sunLong = LIM(sunMeanAnom + 1.916 * sin(RAD(sunMeanAnom)) + 0.02 * sin(RAD(2 * sunMeanAnom)) + 282.634, 360.0);
         double sunRA = LIM(DEG(atan(0.91764 * tan(RAD(sunLong)))), 360.0);
-        sunRA = (sunRA + (floor(sunLong / 90) * 90 - floor(sunRA / 90) * 90)) / 15.0;
+        sunRA = (sunRA + (floor(sunLong / 90.0) * 90.0 - floor(sunRA / 90.0) * 90.0)) / 15.0;
         double sinDec = 0.39782 * sin(RAD(sunLong));
         double cosDec = cos(asin(sinDec));
         double cosH = (cos(RAD(zenith)) - sinDec * sin(RAD(std::stod(CONFIG_ESP_LATITUDE)))) / (cosDec * cos(RAD(std::stod(CONFIG_ESP_LATITUDE))));
@@ -102,22 +120,31 @@ namespace SNTP
             return -1;
         }
 
-        return LIM((isSunrise ? (360 - DEG(acos(cosH))) : DEG(acos(cosH))) / 15 + sunRA - time * 0.06751 - 6.622 - longInHour, 24.0);
+        return LIM((isSunrise ? (360.0 - DEG(acos(cosH))) : DEG(acos(cosH))) / 15.0 + sunRA - 0.06571 * time - 6.622 - longInHour, 24.0);
     }
 
-    int32_t Sntp::msToSunEvent(bool isSunrise, bool isOfficial, bool isToday)
+    [[nodiscard]] int32_t Sntp::msToSunEvent(bool isSunrise, bool isOfficial, bool isToday)
     {
         std::time_t timeNow{std::chrono::system_clock::to_time_t(timePointNow())};
         std::tm *timeNow_gm = std::gmtime(&timeNow);
         double UT = getUTToSunEvent(isSunrise, (isOfficial ? 90.833 : 108.0), timeNow_gm->tm_yday + (isToday ? 0 : 1));
+
+        if (UT == -1)
+            return -1;
+
         return floor((((UT + (isToday ? 0 : 24) - timeNow_gm->tm_hour) * 60 - timeNow_gm->tm_min) * 60 - timeNow_gm->tm_sec) * 1000);
     }
 
-    int32_t Sntp::msToLocTime(int hours, int mins, int secs)
+    [[nodiscard]] int32_t Sntp::msToLocTime(int hours, int mins, int secs)
     {
         std::time_t timeNow{std::chrono::system_clock::to_time_t(timePointNow())};
         std::tm *timeNow_loc = std::localtime(&timeNow);
         return (((hours - timeNow_loc->tm_hour) * 60 + mins - timeNow_loc->tm_min) * 60 + secs - timeNow_loc->tm_sec) * 1000;
     }
 
+    [[nodiscard]] int32_t Sntp::getWDay()
+    {
+        std::time_t timeNow{std::chrono::system_clock::to_time_t(timePointNow())};
+        return std::localtime(&timeNow)->tm_wday;
+    }
 }

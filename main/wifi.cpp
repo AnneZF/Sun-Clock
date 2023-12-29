@@ -1,10 +1,5 @@
 #include "wifi.h"
 
-/*
-todo
-add function to reset config after using set functions
-*/
-
 namespace WIFI {
     std::mutex WiFi::_mutx{};
     WiFi::state_e WiFi::_state{state_e::NOT_INITIALISED};
@@ -101,26 +96,26 @@ namespace WIFI {
         }
     }
 
-    esp_err_t WiFi::begin() {
-        std::lock_guard<std::mutex> connect_guard(_mutx);
+    // esp_err_t WiFi::begin() {
+    //     std::lock_guard<std::mutex> connect_guard(_mutx);
 
-        esp_err_t status {ESP_OK};
+    //     esp_err_t status {ESP_OK};
 
-        switch(_state) {
-            case state_e::READY_TO_CONNECT:
-            case state_e::DISCONNECTED:
-            case state_e::CONNECTING:
-            case state_e::WAITING_FOR_IP:
-            case state_e::CONNECTED:
-                break;
-            case state_e::NOT_INITIALISED:
-            case state_e::INITIALISED:
-            case state_e::ERROR:
-                status = ESP_FAIL;
-                break;
-        }
-        return status;
-    }
+    //     switch(_state) {
+    //         case state_e::READY_TO_CONNECT:
+    //         case state_e::DISCONNECTED:
+    //         case state_e::CONNECTING:
+    //         case state_e::WAITING_FOR_IP:
+    //         case state_e::CONNECTED:
+    //             break;
+    //         case state_e::NOT_INITIALISED:
+    //         case state_e::INITIALISED:
+    //         case state_e::ERROR:
+    //             status = ESP_FAIL;
+    //             break;
+    //     }
+    //     return status;
+    // }
 
     esp_err_t WiFi::_init() {
         std::lock_guard<std::mutex> mutx_guard(_mutx);
@@ -189,7 +184,6 @@ namespace WIFI {
     //         },
     //     };
     //     _retry_num = 0;
-
     // }
 
     // void WiFi::Set_Others(const wifi_auth_mode_t *scan_auth_mode_threshold, const wifi_sae_pwe_method_t *sae_mode, const char *h2e_identifier) {
