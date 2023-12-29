@@ -36,8 +36,6 @@
 #define WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WAPI_PSK
 #endif
 
-// #define TAG "Wifi Station"
-
 namespace WIFI
 {
     class WiFi
@@ -91,7 +89,7 @@ namespace WIFI
          * @return
          *      - ESP_OK if initialised successfully
          */
-        esp_err_t begin();
+        // esp_err_t begin();
 
         constexpr static const state_e &GetState(void) { return _state; }
     };

@@ -14,11 +14,6 @@
 
 #include "wifi.h"
 
-#define RAD(x) x *M_PI / 180.0
-#define DEG(x) x * 180.0 / M_PI
-#define LIM(x, y) (x >= y ? x - y : x < 0 ? x + y \
-                                          : x);
-
 namespace SNTP
 {
     class Sntp : private WIFI::WiFi
@@ -29,7 +24,7 @@ namespace SNTP
         static std::chrono::_V2::system_clock::time_point _lastUpdate;
         static bool _running;
         static u_int32_t _sync_interval;
-        double getUTToSunEvent(bool isSunrise, float zenith, int dayOfYear);
+        static double getUTToSunEvent(bool isSunrise, float zenith, int dayOfYear);
 
     public:
         Sntp() = default;
@@ -73,6 +68,7 @@ namespace SNTP
         /**
          * @brief Gets time to sun event
          * @remarks see https://edwilliams.org/sunrise_sunset_algorithm.htm for calculations
+         * @see getUTToSunEvent
          *
          * @param[in] isSunrise true if sunrise, false if Sunset
          * @param[in] isOfficial true (default) if Official sun event, else Astronomical sun event calculated
@@ -80,7 +76,7 @@ namespace SNTP
          * @return
          *      '-1' if sun event does not happen on given day, else ms to event from now
          */
-        int32_t msToSunEvent(bool isSunrise, bool isOfficial = true, bool isToday = true);
+        [[nodiscard]] static int32_t msToSunEvent(bool isSunrise, bool isOfficial = true, bool isToday = true);
 
         /**
          * @brief Gets time to event
@@ -91,6 +87,8 @@ namespace SNTP
          * @return
          *      ms to input time
          */
-        int32_t msToLocTime(int hours = 0, int mins = 0, int secs = 0);
+        [[nodiscard]] static int32_t msToLocTime(int hours = 0, int mins = 0, int secs = 0);
+
+        [[nodiscard]] static int32_t getWDay();
     };
 }
