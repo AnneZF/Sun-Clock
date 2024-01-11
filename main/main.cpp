@@ -2,13 +2,13 @@
 
 void tick(void *pvParameter)
 {
-    TickType_t startTime;
+    TickType_t startTick;
     while (true)
     {
-        startTime = xTaskGetTickCount();
-        ESP_LOGI("Main Update", "%s", Sntp.timeNowAscii());
+        startTick = xTaskGetTickCount();
+        // ESP_LOGI("Tick", "%s", Sntp.timeNowAscii());
         Led.blink();
-        xTaskDelayUntil(&startTime, pdMS_TO_TICKS(1000));
+        xTaskDelayUntil(&startTick, pdMS_TO_TICKS(1000));
     }
 }
 
@@ -31,7 +31,7 @@ void setColourRange(void (*setter)(u_int16_t, float, float, float), float v0, fl
 
 void sunriseStart(int ms)
 {
-    TickType_t startTime;
+    TickType_t startTick;
     float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
     float h = 240;
     float dH = 180.0 / d; // blue to yellow
@@ -41,13 +41,13 @@ void sunriseStart(int ms)
     float dA = -30.0 / d;
     for (int i = 0; i < d; i++)
     {
-        startTime = xTaskGetTickCount();
+        startTick = xTaskGetTickCount();
         setColourRange(&Leds.setPixelHSL, h, 1, l, a);
         Leds.send();
         h += dH;
         l += dL;
         a += dA;
-        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
+        vTaskDelayUntil(&startTick, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
 
     setColourRange(&Leds.setPixelHSL, 0, 1, 1);
@@ -56,17 +56,17 @@ void sunriseStart(int ms)
 
 void sunriseEnd(int ms)
 {
-    TickType_t startTime;
+    TickType_t startTick;
     float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
     float v = 1;
     float dV = -0.999 / d;
     for (int i = 0; i < d; i++)
     {
-        startTime = xTaskGetTickCount();
+        startTick = xTaskGetTickCount();
         setColourRange(&Leds.setPixelHSL, 0, v, v);
         Leds.send();
         v += dV;
-        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
+        vTaskDelayUntil(&startTick, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
 
     Leds.clear();
@@ -75,7 +75,7 @@ void sunriseEnd(int ms)
 
 void sunsetStart(int ms)
 {
-    TickType_t startTime;
+    TickType_t startTick;
     float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
     float h = 60;
     float dH = 300.0 / d; // yellow to blue
@@ -85,13 +85,13 @@ void sunsetStart(int ms)
     float dA = 45.0 / d;
     for (int i = 0; i < d; i++)
     {
-        startTime = xTaskGetTickCount();
+        startTick = xTaskGetTickCount();
         setColourRange(&Leds.setPixelHSL, h, 1, l, a);
         Leds.send();
         h += dH;
         l += dL;
         a += dA;
-        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
+        vTaskDelayUntil(&startTick, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
 
     // setColourRange(&Leds.setPixelHSL, 0, 1, 1);
@@ -100,7 +100,7 @@ void sunsetStart(int ms)
 
 void sunsetEnd(int ms)
 {
-    TickType_t startTime;
+    TickType_t startTick;
     float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
     float h = 0;
     float l = 0.949;
@@ -108,12 +108,12 @@ void sunsetEnd(int ms)
     float dA = -45.0 / d;
     for (int i = 0; i < d; i++)
     {
-        startTime = xTaskGetTickCount();
+        startTick = xTaskGetTickCount();
         setColourRange(&Leds.setPixelHSL, h, 1, l, a);
         Leds.send();
         l = 1.0 * (sin(M_PI * i * CONFIG_ESP_LED_REFRESH_MS / 2 / ms + M_PI / 2) * (3 + sin(2.0 * M_PI * i * CONFIG_ESP_LED_REFRESH_MS / 1000 + M_PI / 2))) / 4;
         a += dA;
-        vTaskDelayUntil(&startTime, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
+        vTaskDelayUntil(&startTick, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
 
     Leds.clear();
@@ -148,14 +148,18 @@ int eventCalculator(int (&timeTo)[6])
     for (int i = 0; i < 6; i++)
     {
         if (timeTo[i] > 0)
+        {
+            if (i == 0 && timeTo[5] < timeTo[0])
+                return 5;
             return i;
+        }
     }
     return 6;
 }
 
 void eventScheduler(void *pvParameter)
 {
-    TickType_t startTime = xTaskGetTickCount();
+    TickType_t startTick = xTaskGetTickCount();
 
     int timeTo[6];
     char eventNow = eventCalculator(timeTo);
@@ -163,7 +167,10 @@ void eventScheduler(void *pvParameter)
     switch (eventNow)
     {
     case SUNRISE_START:
-        xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[0]));
+        ESP_LOGI("Event Scheduler", "Sleeping till Sunrise...");
+        esp_sleep_enable_timer_wakeup(timeTo[0] * 1000);
+        esp_wifi_stop();
+        esp_deep_sleep_start();
         break;
 
     case SUNRISE_END:
@@ -172,7 +179,7 @@ void eventScheduler(void *pvParameter)
         break;
 
     case SUNSET_START:
-        xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[2]));
+        xTaskDelayUntil(&startTick, pdMS_TO_TICKS(timeTo[2]));
         break;
 
     case SUNSET_HOLD:
@@ -187,6 +194,19 @@ void eventScheduler(void *pvParameter)
         break;
 
     case SLEEP:
+        if (timeTo[4] > -29 * 60 * 1000 - 5000)
+        {
+            timeTo[2] = 0;
+            timeTo[3] = 5000;
+            eventNow = SUNSET_START;
+        }
+        else
+        {
+            ESP_LOGI("Event Scheduler", "Sleeping till Calculation Time...");
+            esp_sleep_enable_timer_wakeup(timeTo[5] * 1000);
+            esp_wifi_stop();
+            esp_deep_sleep_start();
+        }
         break;
 
     default:
@@ -206,7 +226,7 @@ void eventScheduler(void *pvParameter)
         case SUNRISE_END:
             ESP_LOGI("Scheduler", "Sunrise End");
             sunriseEnd(30 * 60 * 1000);
-            xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[2]));
+            xTaskDelayUntil(&startTick, pdMS_TO_TICKS(timeTo[2]));
 
         case SUNSET_START:
             ESP_LOGI("Scheduler", "Sunset Start");
@@ -214,21 +234,26 @@ void eventScheduler(void *pvParameter)
 
         case SUNSET_HOLD:
             ESP_LOGI("Scheduler", "Sunset Hold");
-            xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[4]));
+            xTaskDelayUntil(&startTick, pdMS_TO_TICKS(timeTo[4]));
 
         case SUNSET_END:
             ESP_LOGI("Scheduler", "Sunset End");
             sunsetEnd(30 * 60 * 1000);
-            xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[5]));
+            ESP_LOGI("Scheduler", "Sleeping till Calculation Time...");
+            esp_sleep_enable_timer_wakeup((timeTo[5] - timeTo[4] - 30 * 60 * 1000) * 1000);
+            esp_wifi_stop();
+            esp_deep_sleep_start();
 
         case SLEEP:
-            ESP_LOGI("Scheduler", "Calculating times...");
-            startTime = xTaskGetTickCount();
-            eventNow = eventCalculator(timeTo);
+            break;
+            //     ESP_LOGI("Scheduler", "Calculating times...");
+            //     startTick = xTaskGetTickCount();
+            //     eventNow = eventCalculator(timeTo);
 
-            ESP_LOGI("Scheduler", "Goodnight!");
-            xTaskDelayUntil(&startTime, pdMS_TO_TICKS(timeTo[0]));
-            eventNow = SUNRISE_START;
+            //     ESP_LOGI("Scheduler", "Goodnight!");
+            //     esp_sleep_enable_timer_wakeup(timeTo[0] * 1000);
+            //     esp_wifi_stop();
+            //     esp_deep_sleep_start();
         }
     }
 }
@@ -265,14 +290,18 @@ void setup(void)
     {
         esp_restart();
     }
+
+#if CONFIG_IDF_TARGET_ESP32
+    // Isolate GPIO12 pin from external circuits. This is needed for modules which have an external pull-up resistor on GPIO12 (such as ESP32-WROVER) to minimize current consumption.
+    rtc_gpio_isolate(GPIO_NUM_12);
+#endif
 }
 
 extern "C" void app_main(void)
 {
     setup();
     xTaskCreate(tick, "tick", 2048, nullptr, 10, &tickHandle);
-    ESP_LOGI("tick: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(tickHandle));
-    xTaskCreate(eventScheduler, "schedule", 4096, nullptr, 10, &scheduleHandle);
-    vTaskDelay(1000);
-    ESP_LOGI("scheduler: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(scheduleHandle));
+    // ESP_LOGI("tick: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(tickHandle));
+    xTaskCreate(eventScheduler, "schedule", 2048, nullptr, 10, &scheduleHandle);
+    // ESP_LOGI("scheduler: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(scheduleHandle));
 }
