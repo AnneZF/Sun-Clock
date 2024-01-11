@@ -1,16 +1,18 @@
 #include <string>
 #include "esp_log.h"
+#include "esp_sleep.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_flash.h"
+#include "driver/rtc_io.h"
 
 #include "wifi.h"
 #include "sntp.h"
 #include "led_strip.h"
 #include "led_blink.h"
 
-#define test
+// #define test
 #ifdef test
 #define LEDS 48
 #else
