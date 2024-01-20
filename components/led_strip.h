@@ -5,7 +5,6 @@
 #include <cmath>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-// #include "esp_check.h"
 #include "esp_log.h"
 #include "driver/rmt_encoder.h"
 #include "driver/rmt_tx.h"
@@ -33,7 +32,7 @@ namespace LED
 
     public:
         Led();
-        typedef struct // I think C++ does not need typedef, but the program breaks without it
+        typedef struct 
         {
             rmt_encoder_t base;
             rmt_encoder_t *bytes_encoder;

@@ -26,9 +26,28 @@ namespace SNTP
         static u_int32_t _sync_interval;
         static double getUTToSunEvent(bool isSunrise, float zenith, int dayOfYear);
 
+        static constexpr int wakeTime[7][3] = {{CONFIG_ESP_ALARM_0_0_0, CONFIG_ESP_ALARM_0_0_1, CONFIG_ESP_ALARM_0_0_2},
+                              {CONFIG_ESP_ALARM_1_0_0, CONFIG_ESP_ALARM_1_0_1, CONFIG_ESP_ALARM_1_0_2},
+                              {CONFIG_ESP_ALARM_2_0_0, CONFIG_ESP_ALARM_2_0_1, CONFIG_ESP_ALARM_2_0_2},
+                              {CONFIG_ESP_ALARM_3_0_0, CONFIG_ESP_ALARM_3_0_1, CONFIG_ESP_ALARM_3_0_2},
+                              {CONFIG_ESP_ALARM_4_0_0, CONFIG_ESP_ALARM_4_0_1, CONFIG_ESP_ALARM_4_0_2},
+                              {CONFIG_ESP_ALARM_5_0_0, CONFIG_ESP_ALARM_5_0_1, CONFIG_ESP_ALARM_5_0_2},
+                              {CONFIG_ESP_ALARM_6_0_0, CONFIG_ESP_ALARM_6_0_1, CONFIG_ESP_ALARM_6_0_2}};
+
+        static constexpr int sleepTime[7][3] = {{CONFIG_ESP_ALARM_0_1_0, CONFIG_ESP_ALARM_0_1_1, CONFIG_ESP_ALARM_0_1_2},
+                               {CONFIG_ESP_ALARM_1_1_0, CONFIG_ESP_ALARM_1_1_1, CONFIG_ESP_ALARM_1_1_2},
+                               {CONFIG_ESP_ALARM_2_1_0, CONFIG_ESP_ALARM_2_1_1, CONFIG_ESP_ALARM_2_1_2},
+                               {CONFIG_ESP_ALARM_3_1_0, CONFIG_ESP_ALARM_3_1_1, CONFIG_ESP_ALARM_3_1_2},
+                               {CONFIG_ESP_ALARM_4_1_0, CONFIG_ESP_ALARM_4_1_1, CONFIG_ESP_ALARM_4_1_2},
+                               {CONFIG_ESP_ALARM_5_1_0, CONFIG_ESP_ALARM_5_1_1, CONFIG_ESP_ALARM_5_1_2},
+                               {CONFIG_ESP_ALARM_6_1_0, CONFIG_ESP_ALARM_6_1_1, CONFIG_ESP_ALARM_6_1_2}};
+
     public:
         Sntp() = default;
         ~Sntp() { esp_sntp_stop(); };
+
+        static int timeTo[8];
+        static int eventNow;
 
         /**
          * @brief Initialises SNTP
@@ -89,6 +108,8 @@ namespace SNTP
          */
         [[nodiscard]] static int32_t msToLocTime(int hours = 0, int mins = 0, int secs = 0);
 
-        [[nodiscard]] static int32_t getWDay();
+        [[nodiscard]] static int8_t getWDay();
+
+        static void eventCalculator();
     };
 }

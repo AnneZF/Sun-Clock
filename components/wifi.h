@@ -84,12 +84,12 @@ namespace WIFI
         esp_err_t init();
 
         /**
-         * @brief Begins WiFi
+         * @brief Stops WiFi
          *
          * @return
          *      - ESP_OK if initialised successfully
          */
-        // esp_err_t begin();
+        esp_err_t stop();
 
         constexpr static const state_e &GetState(void) { return _state; }
     };
