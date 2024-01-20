@@ -6,8 +6,10 @@ void tick(void *pvParameter)
     while (true)
     {
         startTick = xTaskGetTickCount();
-        // ESP_LOGI("Tick", "%s", Sntp.timeNowAscii());
         Led.blink();
+        oLed.clear_screen();
+        oLed.drawTime(Sntp.timeNowAscii());
+        oLed.refresh();
         xTaskDelayUntil(&startTick, pdMS_TO_TICKS(1000));
     }
 }
@@ -111,7 +113,7 @@ void sunsetEnd(int ms)
         startTick = xTaskGetTickCount();
         setColourRange(&Leds.setPixelHSL, h, 1, l, a);
         Leds.send();
-        l = 1.0 * (sin(M_PI * i * CONFIG_ESP_LED_REFRESH_MS / 2 / ms + M_PI / 2) * (3 + sin(2.0 * M_PI * i * CONFIG_ESP_LED_REFRESH_MS / 1000 + M_PI / 2))) / 4;
+        l = 1.0 * (sin(M_PI_2 * (i * CONFIG_ESP_LED_REFRESH_MS / ms + 1)) * (3 + sin(M_PI * i * CONFIG_ESP_LED_REFRESH_MS / 1000 + M_PI_2))) / 4;
         a += dA;
         vTaskDelayUntil(&startTick, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
@@ -120,140 +122,119 @@ void sunsetEnd(int ms)
     Leds.send();
 }
 
-int eventCalculator(int (&timeTo)[6])
+void sleep(int ms)
 {
-    int wday = Sntp.getWDay();
-    timeTo[0] = Sntp.msToLocTime(wakeTime[wday][0], wakeTime[wday][1], wakeTime[wday][2]);
-    timeTo[1] = Sntp.msToSunEvent(true);
-    timeTo[2] = Sntp.msToSunEvent(false);
-    timeTo[3] = Sntp.msToSunEvent(false, false);
-    timeTo[4] = Sntp.msToLocTime(sleepTime[wday][0], sleepTime[wday][1], sleepTime[wday][2]);
-    timeTo[5] = Sntp.msToLocTime(2);
-
-    if (timeTo[1] - timeTo[0] < 30 * 60 * 1000)
-        timeTo[1] = timeTo[0];
-
-    timeTo[0] -= 30 * 60 * 1000;
-
-    if (timeTo[3] == -1)
-        timeTo[3] = timeTo[2] + 30 * 60 * 1000;
-
-    timeTo[4] -= 30 * 60 * 1000;
-
-    if (timeTo[5] < 0)
-        timeTo[5] = Sntp.msToLocTime(26);
-
-    ESP_LOGI("Calculated Schedule", "\n\nSunrise Start:\t%- 10i\nSunrise End:\t%- 10i\nSunset Start:\t%- 10i\nSunset Hold:\t%- 10i\nSunset End:\t%- 10i\nSleep:\t\t%- 10i", timeTo[0], timeTo[1], timeTo[2], timeTo[3], timeTo[4], timeTo[5]);
-
-    for (int i = 0; i < 6; i++)
-    {
-        if (timeTo[i] > 0)
-        {
-            if (i == 0 && timeTo[5] < timeTo[0])
-                return 5;
-            return i;
-        }
-    }
-    return 6;
+    esp_sleep_enable_timer_wakeup(static_cast<u_int64_t>(ms) * 1000);
+    WiFi.stop();
+    oLed.power_down();
+    esp_deep_sleep_start();
 }
 
 void eventScheduler(void *pvParameter)
 {
-    TickType_t startTick = xTaskGetTickCount();
-
-    int timeTo[6];
-    char eventNow = eventCalculator(timeTo);
-
-    switch (eventNow)
+    TickType_t startTick;
+    switch (Sntp.eventNow)
     {
     case SUNRISE_START:
         ESP_LOGI("Event Scheduler", "Sleeping till Sunrise...");
-        esp_sleep_enable_timer_wakeup(timeTo[0] * 1000);
-        esp_wifi_stop();
-        esp_deep_sleep_start();
+        sleep(Sntp.timeTo[SUNRISE_START]);
+        break;
+
+    case WAKE_TIME:
+        Sntp.timeTo[SUNRISE_START] = 0;
+        Sntp.eventNow = SUNRISE_START;
         break;
 
     case SUNRISE_END:
-        timeTo[0] = 0;
-        eventNow = SUNRISE_START;
+        if (Sntp.timeTo[SUNRISE_END] > 5000)
+        {
+            Sntp.timeTo[SUNRISE_START] = 0;
+            Sntp.timeTo[WAKE_TIME] = 5000;
+            Sntp.eventNow = SUNRISE_START;
+        }
+        else
+            Sntp.eventNow = SUNSET_START;
         break;
 
     case SUNSET_START:
-        xTaskDelayUntil(&startTick, pdMS_TO_TICKS(timeTo[2]));
         break;
 
     case SUNSET_HOLD:
-        timeTo[2] = 0;
-        eventNow = SUNSET_START;
+        Sntp.timeTo[SUNSET_START] = 0;
+        Sntp.eventNow = SUNSET_START;
         break;
 
     case SUNSET_END:
-        timeTo[2] = 0;
-        timeTo[3] = 5000;
-        eventNow = SUNSET_START;
+        Sntp.timeTo[SUNSET_START] = 0;
+        Sntp.timeTo[SUNSET_HOLD] = 5000;
+        Sntp.eventNow = SUNSET_START;
         break;
 
-    case SLEEP:
-        if (timeTo[4] > -29 * 60 * 1000 - 5000)
+    case SLEEP_TIME:
+        if (Sntp.timeTo[SLEEP_TIME] > 10000)
         {
-            timeTo[2] = 0;
-            timeTo[3] = 5000;
-            eventNow = SUNSET_START;
+            ESP_LOGI("Event Scheduler", "Sunset Start");
+            sunsetStart(5000);
+            Sntp.timeTo[SUNSET_END] = 5000;
+            Sntp.eventNow = SUNSET_END;
         }
-        else
-        {
-            ESP_LOGI("Event Scheduler", "Sleeping till Calculation Time...");
-            esp_sleep_enable_timer_wakeup(timeTo[5] * 1000);
-            esp_wifi_stop();
-            esp_deep_sleep_start();
-        }
+        break;
+
+    case CALCULATE:
+        Sntp.eventNow = SLEEP_TIME;
         break;
 
     default:
-        ESP_LOGE("Event Scheduler", "Cannot Find Correct Time. Restarting...");
-        esp_restart();
+        ESP_LOGE("Event Scheduler", "Cannot find correct time...");
         break;
     }
 
     while (true)
     {
-        switch (eventNow)
+        switch (Sntp.eventNow)
         {
         case SUNRISE_START:
             ESP_LOGI("Scheduler", "Sunrise Start");
-            sunriseStart(timeTo[1] - timeTo[0]);
+            sunriseStart(Sntp.timeTo[WAKE_TIME] - Sntp.timeTo[SUNRISE_START]);
+
+        case WAKE_TIME:
 
         case SUNRISE_END:
             ESP_LOGI("Scheduler", "Sunrise End");
-            sunriseEnd(30 * 60 * 1000);
-            xTaskDelayUntil(&startTick, pdMS_TO_TICKS(timeTo[2]));
+            sunriseEnd(Sntp.timeTo[SUNRISE_END] - Sntp.timeTo[WAKE_TIME]);
 
         case SUNSET_START:
+            if (Sntp.timeTo[SUNSET_START] > 0)
+            {
+                ESP_LOGI("Scheduler", "Waiting for Sunset Start");
+                Sntp.eventCalculator();
+                startTick = xTaskGetTickCount();
+                xTaskDelayUntil(&startTick, pdMS_TO_TICKS(Sntp.timeTo[SUNSET_START]));
+            }
             ESP_LOGI("Scheduler", "Sunset Start");
-            sunsetStart(timeTo[3] - timeTo[2]);
+            sunsetStart(Sntp.timeTo[SUNSET_HOLD] - Sntp.timeTo[SUNSET_START]);
 
         case SUNSET_HOLD:
-            ESP_LOGI("Scheduler", "Sunset Hold");
-            xTaskDelayUntil(&startTick, pdMS_TO_TICKS(timeTo[4]));
+            if (Sntp.timeTo[SUNSET_END] > 0)
+            {
+                ESP_LOGI("Scheduler", "Sunset Hold");
+                Sntp.eventCalculator();
+                startTick = xTaskGetTickCount();
+                xTaskDelayUntil(&startTick, pdMS_TO_TICKS(Sntp.timeTo[SUNSET_END]));
+            }
 
         case SUNSET_END:
             ESP_LOGI("Scheduler", "Sunset End");
-            sunsetEnd(30 * 60 * 1000);
+            sunsetEnd(Sntp.timeTo[SLEEP_TIME] - Sntp.timeTo[SUNSET_END]);
+
+        case SLEEP_TIME:
             ESP_LOGI("Scheduler", "Sleeping till Calculation Time...");
-            esp_sleep_enable_timer_wakeup((timeTo[5] - timeTo[4] - 30 * 60 * 1000) * 1000);
-            esp_wifi_stop();
-            esp_deep_sleep_start();
+            Sntp.eventCalculator();
+            sleep(Sntp.timeTo[CALCULATE]);
 
-        case SLEEP:
-            break;
-            //     ESP_LOGI("Scheduler", "Calculating times...");
-            //     startTick = xTaskGetTickCount();
-            //     eventNow = eventCalculator(timeTo);
-
-            //     ESP_LOGI("Scheduler", "Goodnight!");
-            //     esp_sleep_enable_timer_wakeup(timeTo[0] * 1000);
-            //     esp_wifi_stop();
-            //     esp_deep_sleep_start();
+        case CALCULATE:
+        default:
+            vTaskDelay(60 * 60 * 1000);
         }
     }
 }
@@ -267,8 +248,11 @@ void setup(void)
     }
     if (!Leds.ledState())
     {
-        ESP_LOGI("Main", "Initialising LED...");
         Leds.init();
+    }
+    if (!oLed.oled_state())
+    {
+        oLed.init();
     }
     nvs_flash_init();
     ESP_LOGI("Main", "Initialising WiFi...");
@@ -300,8 +284,9 @@ void setup(void)
 extern "C" void app_main(void)
 {
     setup();
-    xTaskCreate(tick, "tick", 2048, nullptr, 10, &tickHandle);
-    // ESP_LOGI("tick: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(tickHandle));
     xTaskCreate(eventScheduler, "schedule", 2048, nullptr, 10, &scheduleHandle);
     // ESP_LOGI("scheduler: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(scheduleHandle));
+    vTaskDelay(100);
+    xTaskCreate(tick, "tick", 2048, nullptr, 10, &tickHandle);
+    // ESP_LOGI("tick: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(tickHandle));
 }

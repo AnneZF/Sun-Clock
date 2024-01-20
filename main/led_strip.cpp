@@ -148,19 +148,15 @@ namespace LED
         };
         status = rmt_new_tx_channel(&tx_chan_config, &_led_channel);
         if (ESP_OK == status)
-        {
             status = _rmt_new_led_strip_encoder(&_led_encoder);
-        }
         if (ESP_OK == status)
-        {
             status = rmt_enable(_led_channel);
-        }
         if (ESP_OK == status)
         {
             clear();
             send();
             _running = true;
-            ESP_LOGI("LED Strip", "Initialised!");
+            ESP_LOGI("LED Strip", "Initialised");
         }
         return status;
     }

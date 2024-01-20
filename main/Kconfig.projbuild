@@ -89,13 +89,13 @@ menu "Date/Time Configuration"
         default ""
 endmenu
 
-menu "LED Strip Configuration"
+config ESP_ONBOARD_LED_GPIO_NUM
+    int "Onboard LED GPIO number"
+    default 2
+    help 
+        See board's pinout diagram
 
-    config ESP_ONBOARD_LED_GPIO_NUM
-        int "Onboard LED GPIO number"
-        default 2
-        help 
-            See board's pinout diagram
+menu "LED Strip Configuration"
 
     config ESP_LED_STRIP_GPIO_NUM
         int "LED strip GPIO number"
@@ -121,6 +121,33 @@ menu "LED Strip Configuration"
         help
             ms between LED refresh
 
+endmenu
+
+menu "OLED Display"
+    config ESP_OLED_SCL_GPIO_NUM
+    int "OLED SCL GPIO number"
+    default 26
+    
+    config ESP_OLED_SDA_GPIO_NUM
+        int "OLED SDA GPIO number"
+        default 25
+
+    # config ESP_OLED_I2C_MASTER_NUM
+    #     int "OLED I2C number"
+
+    config ESP_OLED_I2C_MASTER_FREQ_HZ
+        int "OLED Frequency"
+        default 100000
+
+    # config ESP_OLED_I2C_ADDRESS
+
+    config ESP_OLED_WIDTH
+        int "OLED Width"
+        default 128
+
+    config ESP_OLED_HEIGHT
+        int "OLED Height"
+        default 64
 endmenu
 
 menu "Alarm Times"

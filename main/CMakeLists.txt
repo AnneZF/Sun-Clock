@@ -2,7 +2,9 @@ set(SOURCES main.cpp
             wifi.cpp
             sntp.cpp
             led_strip.cpp
-            led_blink.cpp)
+            led_blink.cpp
+            ssd1306_fonts.cpp
+            ssd1306.cpp)
             
 idf_component_register(SRCS ${SOURCES}
                         INCLUDE_DIRS . ../components

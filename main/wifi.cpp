@@ -96,27 +96,6 @@ namespace WIFI {
         }
     }
 
-    // esp_err_t WiFi::begin() {
-    //     std::lock_guard<std::mutex> connect_guard(_mutx);
-
-    //     esp_err_t status {ESP_OK};
-
-    //     switch(_state) {
-    //         case state_e::READY_TO_CONNECT:
-    //         case state_e::DISCONNECTED:
-    //         case state_e::CONNECTING:
-    //         case state_e::WAITING_FOR_IP:
-    //         case state_e::CONNECTED:
-    //             break;
-    //         case state_e::NOT_INITIALISED:
-    //         case state_e::INITIALISED:
-    //         case state_e::ERROR:
-    //             status = ESP_FAIL;
-    //             break;
-    //     }
-    //     return status;
-    // }
-
     esp_err_t WiFi::_init() {
         std::lock_guard<std::mutex> mutx_guard(_mutx);
 
@@ -132,9 +111,8 @@ namespace WIFI {
                 }
             }
 
-            if(ESP_OK == status) {
+            if(ESP_OK == status)
                 status = esp_wifi_init(&_wifi_init_cfg);
-            }
 
             if(ESP_OK == status) {
                 status = esp_event_handler_instance_register(WIFI_EVENT,
@@ -152,21 +130,15 @@ namespace WIFI {
                                                                 nullptr);
             }
 
-            if(ESP_OK == status) {
+            if(ESP_OK == status)
                 status = esp_wifi_set_mode(WIFI_MODE_STA);
-            }
-
-            if(ESP_OK == status) {
+            if(ESP_OK == status)
                 status = esp_wifi_set_config(WIFI_IF_STA, &_wifi_cfg);
-            }
 
-            if(ESP_OK == status) {
+            if(ESP_OK == status)
                 status = esp_wifi_start();
-            }
-
-            if(ESP_OK == status) {
+            if(ESP_OK == status)
                 _state = state_e::INITIALISED;
-            }
         }
 
         else if(state_e::ERROR == _state) {
@@ -199,5 +171,10 @@ namespace WIFI {
 
     esp_err_t WiFi::init() {
         return _init();
+    }
+
+    esp_err_t WiFi::stop(){
+        _retry_num = _max_retry; // stops WiFi from attempting to reconnect
+        return esp_wifi_stop();
     }
 }

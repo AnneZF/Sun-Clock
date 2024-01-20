@@ -5,9 +5,13 @@ namespace SNTP
     std::chrono::_V2::system_clock::time_point Sntp::_lastUpdate{};
     bool Sntp::_running{false};
 
+    int Sntp::timeTo[8];
+    int Sntp::eventNow;
+
     void Sntp::callbackOnNtpUpdate(timeval *tv)
     {
-        _lastUpdate = std::chrono::system_clock::now();
+        // _lastUpdate = std::chrono::system_clock::now();
+        eventCalculator();
     }
 
     esp_err_t Sntp::init()
@@ -142,9 +146,50 @@ namespace SNTP
         return (((hours - timeNow_loc->tm_hour) * 60 + mins - timeNow_loc->tm_min) * 60 + secs - timeNow_loc->tm_sec) * 1000;
     }
 
-    [[nodiscard]] int32_t Sntp::getWDay()
+    [[nodiscard]] int8_t Sntp::getWDay()
     {
         std::time_t timeNow{std::chrono::system_clock::to_time_t(timePointNow())};
         return std::localtime(&timeNow)->tm_wday;
+    }
+
+    void Sntp::eventCalculator()
+    {
+        int wday = getWDay();
+        timeTo[1] = msToLocTime(wakeTime[wday][0], wakeTime[wday][1], wakeTime[wday][2]);
+        timeTo[2] = msToSunEvent(true);
+        timeTo[3] = msToSunEvent(false);
+        timeTo[4] = msToSunEvent(false, false);
+        timeTo[6] = msToLocTime(sleepTime[wday][0], sleepTime[wday][1], sleepTime[wday][2]);
+        timeTo[7] = msToLocTime(2);
+
+        if (timeTo[2] < timeTo[1] + 30 * 60 * 1000)
+            timeTo[2] = timeTo[1] + 30 * 60 * 1000;
+
+        timeTo[0] = timeTo[1] - 30 * 60 * 1000;
+
+        if (timeTo[4] == -1)
+            timeTo[4] = timeTo[3] + 30 * 60 * 1000;
+
+        timeTo[5] = timeTo[6] - 30 * 60 * 1000;
+
+        if (timeTo[7] < 0)
+            timeTo[7] = msToLocTime(26);
+
+        ESP_LOGI("SNTP", "Calculated Schedule (ms)\n\nSunrise Start:\t%- 10i\nSunrise End:\t%- 10i\nSunset Start:\t%- 10i\nSunset Hold:\t%- 10i\nSunset End:\t%- 10i\nRecalculation:\t%- 10i\n\n", timeTo[0], timeTo[2], timeTo[3], timeTo[4], timeTo[5], timeTo[7]);
+
+        for (int i = 0; i < 8; i++)
+        {
+            if (timeTo[i] > 0)
+            {
+                if (i == 0 && timeTo[7] < timeTo[0])
+                {
+                    eventNow = 7;
+                    return;
+                }
+                eventNow = i;
+                return;
+            }
+        }
+        eventNow = 8;
     }
 }
