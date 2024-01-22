@@ -10,7 +10,7 @@ namespace SNTP
 
     void Sntp::callbackOnNtpUpdate(timeval *tv)
     {
-        // _lastUpdate = std::chrono::system_clock::now();
+        _lastUpdate = std::chrono::system_clock::now();
         eventCalculator();
     }
 

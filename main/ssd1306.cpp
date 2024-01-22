@@ -30,9 +30,9 @@ namespace SSD1306
         return status;
     }
 
-    void oled::clear_screen(uint8_t chFill)
+    void oled::clear_screen(uint8_t cFill)
     {
-        memset(_displayBuffer, chFill, sizeof(_displayBuffer));
+        memset(_displayBuffer, cFill, sizeof(_displayBuffer));
     }
 
     esp_err_t oled::refresh()
@@ -40,7 +40,7 @@ namespace SSD1306
         return _write_data(&_displayBuffer[0][0], sizeof(_displayBuffer));
     }
 
-    esp_err_t oled::_init()
+    esp_err_t oled::_init() // swap out commands in comments for 180(deg) rotation
     {
         esp_err_t status;
 
@@ -52,8 +52,8 @@ namespace SSD1306
         i2c_master_write_byte(cmd, OLED_CMD_SET_DISPLAY_START_LINE, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_CONTRAST, true);
         i2c_master_write_byte(cmd, 0xFF, true);
-        i2c_master_write_byte(cmd, OLED_CMD_SET_SEGMENT_REMAP_1, true);
-        i2c_master_write_byte(cmd, 0xC0, true);
+        i2c_master_write_byte(cmd, OLED_CMD_SET_SEGMENT_REMAP_0, true); // OLED_CMD_SET_SEGMENT_REMAP_0
+        i2c_master_write_byte(cmd, 0xC8, true);                         // 0xC0
         i2c_master_write_byte(cmd, OLED_CMD_DISPLAY_NORMAL, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_MUX_RATIO, true);
         i2c_master_write_byte(cmd, 0x3F, true);
@@ -62,7 +62,7 @@ namespace SSD1306
         i2c_master_write_byte(cmd, OLED_CMD_SET_PRECHARGE, true);
         i2c_master_write_byte(cmd, 0xF1, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_COM_PIN_MAP, true);
-        i2c_master_write_byte(cmd, 0x22, true);
+        i2c_master_write_byte(cmd, 0x02, true); // 0x22
         i2c_master_write_byte(cmd, OLED_CMD_SET_VCOMH_DESELCT, true);
         i2c_master_write_byte(cmd, 0x40, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_CHARGE_PUMP, true);
@@ -126,6 +126,8 @@ namespace SSD1306
         status = i2c_master_cmd_begin(_bus, cmd, 10 / portTICK_PERIOD_MS);
         i2c_cmd_link_delete(cmd);
 
+        if (ESP_OK == status)
+            _running = false;
         return status;
     }
 
@@ -150,10 +152,10 @@ namespace SSD1306
         for (uint8_t i = 0; i < (cWidth == 32 ? sizeof(sevenSeg3216[0]) : sizeof(sevenSeg1608[0])); i++)
         {
             if (cWidth == 32)
-                cTemp = sevenSeg3216[cChar][i];
+                cTemp = sevenSeg3216[cChar - '0'][i];
             else
-                cTemp = sevenSeg1608[cChar][i];
-            if (point)
+                cTemp = sevenSeg1608[cChar - '0'][i];
+            if (!point)
                 cTemp = ~cTemp;
             for (uint8_t j = 0; j < 8; j++)
             {
@@ -175,10 +177,10 @@ namespace SSD1306
         for (uint8_t i = 0; i < (cWidth == 32 ? sizeof(c_chFont1608[0]) : sizeof(c_chFont1206[0])); i++)
         {
             if (cWidth == 16)
-                cTemp = c_chFont1608[cChar][i];
+                cTemp = c_chFont1608[cChar - ' '][i];
             else
-                cTemp = c_chFont1206[cChar][i];
-            if (point)
+                cTemp = c_chFont1206[cChar - ' '][i];
+            if (!point)
                 cTemp = ~cTemp;
             for (uint8_t j = 0; j < 8; j++)
             {
@@ -196,20 +198,20 @@ namespace SSD1306
 
     void oled::drawTime(const char *SNTP_time)
     {
-        draw_7seg(0, 0, SNTP_time[11] - '0', 32, 0);
-        draw_7seg(16, 0, SNTP_time[12] - '0', 32, 0);
-        draw_7seg(32, 0, SNTP_time[14] - '0', 32, 0);
-        draw_7seg(48, 0, SNTP_time[15] - '0', 32, 0);
-        draw_7seg(64, 0, SNTP_time[17] - '0', 16, 0);
-        draw_7seg(72, 0, SNTP_time[18] - '0', 16, 0);
-        draw_char(80, 0, SNTP_time[0] - ' ', 16, 0);
-        draw_char(88, 0, SNTP_time[1] - ' ', 16, 0);
-        draw_char(96, 0, SNTP_time[2] - ' ', 16, 0);
-        draw_char(64, 16, SNTP_time[8] - ' ', 12, 0);
-        draw_char(70, 16, SNTP_time[9] - ' ', 12, 0);
-        draw_char(76, 16, SNTP_time[4] - ' ', 12, 0);
-        draw_char(82, 16, SNTP_time[5] - ' ', 12, 0);
-        draw_char(88, 16, SNTP_time[6] - ' ', 12, 0);
+        draw_7seg(0, 0, SNTP_time[11], 32, 1); // hour
+        draw_7seg(20, 0, SNTP_time[12], 32, 1);
+        draw_7seg(40, 0, SNTP_time[14], 32, 1); // minute
+        draw_7seg(60, 0, SNTP_time[15], 32, 1);
+        draw_7seg(80, 0, SNTP_time[17], 16, 1); // second
+        draw_7seg(90, 0, SNTP_time[18], 16, 1);
+        draw_char(104, 0, SNTP_time[0], 16, 1); // day
+        draw_char(112, 0, SNTP_time[1], 16, 1);
+        draw_char(120, 0, SNTP_time[2], 16, 1);
+        draw_char(84, 16, SNTP_time[8], 16, 1); // date
+        draw_char(94, 16, SNTP_time[9], 16, 1);
+        draw_char(104, 16, SNTP_time[4], 16, 1); // month
+        draw_char(112, 16, SNTP_time[5], 16, 1);
+        draw_char(120, 16, SNTP_time[6], 16, 1);
     }
 
     void oled::fill_rectangle(uint8_t xPos1, uint8_t xPos2, uint8_t yPos1, uint8_t yPos2, bool point)
@@ -236,4 +238,3 @@ namespace SSD1306
         }
     }
 }
-

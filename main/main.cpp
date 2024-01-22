@@ -7,7 +7,6 @@ void tick(void *pvParameter)
     {
         startTick = xTaskGetTickCount();
         Led.blink();
-        oLed.clear_screen();
         oLed.drawTime(Sntp.timeNowAscii());
         oLed.refresh();
         xTaskDelayUntil(&startTick, pdMS_TO_TICKS(1000));
@@ -95,9 +94,6 @@ void sunsetStart(int ms)
         a += dA;
         vTaskDelayUntil(&startTick, pdMS_TO_TICKS(CONFIG_ESP_LED_REFRESH_MS));
     }
-
-    // setColourRange(&Leds.setPixelHSL, 0, 1, 1);
-    // Leds.send();
 }
 
 void sunsetEnd(int ms)
@@ -286,7 +282,7 @@ extern "C" void app_main(void)
     setup();
     xTaskCreate(eventScheduler, "schedule", 2048, nullptr, 10, &scheduleHandle);
     // ESP_LOGI("scheduler: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(scheduleHandle));
-    vTaskDelay(100);
+    vTaskDelay(100); // to avoid blinking if the next task is sleep
     xTaskCreate(tick, "tick", 2048, nullptr, 10, &tickHandle);
     // ESP_LOGI("tick: Stack High Water Mark", "%i", uxTaskGetStackHighWaterMark(tickHandle));
 }
