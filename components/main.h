@@ -13,9 +13,9 @@
 #include "led_blink.h"
 #include "ssd1306.h"
 
-#define test
+// #define test
 #ifdef test
-#define LEDS 12
+#define LEDS 48
 #else
 #define LEDS CONFIG_ESP_LED_NUMBERS
 #endif
@@ -48,5 +48,6 @@ static void sunriseStart(int ms);
 static void sunriseEnd(int ms);
 static void sunsetStart(int ms);
 static void sunsetEnd(int ms);
+static void sleep(int ms);
 static void eventScheduler(void *pvParameter);
 static void setup();
