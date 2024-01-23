@@ -9,8 +9,8 @@
 
 #include "wifi.h"
 #include "sntp.h"
-#include "led_strip.h"
 #include "led_blink.h"
+#include "led_strip.h"
 #include "ssd1306.h"
 
 #define test
@@ -35,8 +35,8 @@ typedef enum
 WIFI::WiFi::state_e wifiState{WIFI::WiFi::state_e::NOT_INITIALISED};
 WIFI::WiFi WiFi;
 SNTP::Sntp Sntp;
-LED::Led Leds;
 BLINK::led_blink Led;
+LED::Led Leds;
 SSD1306::oled oLed;
 
 static TaskHandle_t tickHandle;
