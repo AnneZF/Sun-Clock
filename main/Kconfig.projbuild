@@ -89,7 +89,7 @@ endmenu
 menu "Onboard LED Blink"
     config ESP_ONBOARD_LED
         bool "Enable Onboard LED blink"
-        default y
+        default n
     if ESP_ONBOARD_LED
         config ESP_ONBOARD_LED_GPIO_NUM
             int "Onboard LED GPIO number"
