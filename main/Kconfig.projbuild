@@ -1,5 +1,4 @@
 menu "WiFi Configuration"
-
     config ESP_WIFI_SSID
         string "WiFi SSID"
         default "myssid"
@@ -63,11 +62,9 @@ menu "WiFi Configuration"
         config ESP_WIFI_AUTH_WAPI_PSK
             bool "WAPI PSK"
     endchoice
-
 endmenu
 
 menu "Date/Time Configuration"
-
     config ESP_TIMEZONE
         string "Time Zone"
         default ""
@@ -89,65 +86,77 @@ menu "Date/Time Configuration"
         default ""
 endmenu
 
-config ESP_ONBOARD_LED_GPIO_NUM
-    int "Onboard LED GPIO number"
-    default 2
-    help 
-        See board's pinout diagram
+menu "Onboard LED Blink"
+    config ESP_ONBOARD_LED
+        bool "Enable Onboard LED blink"
+        default y
+    if ESP_ONBOARD_LED
+        config ESP_ONBOARD_LED_GPIO_NUM
+            int "Onboard LED GPIO number"
+            default 2
+            help 
+                See board's pinout diagram  
+    endif
+endmenu
 
 menu "LED Strip Configuration"
-
-    config ESP_LED_STRIP_GPIO_NUM
-        int "LED strip GPIO number"
-        default 16
-        help 
-            Connecter for middle pin of WS2812
+    config ESP_LED_STRIP
+        bool "Enable LED Strip"
+        default y
     
-    config ESP_LED_STRIP_RESOLUTION
-        int "LED strip resolution (Hz)"
-        default 10000000
-        help
-            LED strip needs a high resolution.
+    if ESP_LED_STRIP
+        config ESP_LED_STRIP_GPIO_NUM
+            int "LED strip GPIO number"
+            default 16
+            help 
+                Connecter for middle pin of WS2812
+        
+        config ESP_LED_STRIP_RESOLUTION
+            int "LED strip resolution (Hz)"
+            default 10000000
+            help
+                LED strip needs a high resolution.
 
-    config ESP_LED_NUMBERS
-        int "Number of LEDs"
-        default 1
-        help
-            Number of LEDs available on strip
-    
-    config ESP_LED_REFRESH_MS
-        int "LED refresh rate (ms)"
-        default 100
-        help
-            ms between LED refresh
-
+        config ESP_LED_NUMBERS
+            int "Number of LEDs"
+            default 1
+            help
+                Number of LEDs available on strip
+        
+        config ESP_LED_REFRESH_MS
+            int "LED refresh rate (ms)"
+            default 100
+            help
+                ms between LED refresh
+    endif
 endmenu
 
 menu "OLED Display"
-    config ESP_OLED_SCL_GPIO_NUM
-    int "OLED SCL GPIO number"
-    default 26
-    
-    config ESP_OLED_SDA_GPIO_NUM
-        int "OLED SDA GPIO number"
-        default 25
+    config ESP_OLED
+        bool "Enable OLED Display"
+        default y
 
-    # config ESP_OLED_I2C_MASTER_NUM
-    #     int "OLED I2C number"
+    if ESP_OLED
+        config ESP_OLED_SCL_GPIO_NUM
+        int "OLED SCL GPIO number"
+        default 26
+        
+        config ESP_OLED_SDA_GPIO_NUM
+            int "OLED SDA GPIO number"
+            default 25
 
-    config ESP_OLED_I2C_MASTER_FREQ_HZ
-        int "OLED Frequency"
-        default 100000
+        config ESP_OLED_I2C_MASTER_FREQ_HZ
+            int "OLED Frequency"
+            default 100000
 
-    # config ESP_OLED_I2C_ADDRESS
+        config ESP_OLED_WIDTH
+            int "OLED Width"
+            default 128
 
-    config ESP_OLED_WIDTH
-        int "OLED Width"
-        default 128
-
-    config ESP_OLED_HEIGHT
-        int "OLED Height"
-        default 64
+        config ESP_OLED_HEIGHT
+            int "OLED Height"
+            default 64
+    endif
 endmenu
 
 menu "Alarm Times"
@@ -164,7 +173,7 @@ menu "Alarm Times"
             config ESP_ALARM_0_0_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
         menu "Sleep"
             config ESP_ALARM_0_1_0
                 int "Hour"
@@ -177,7 +186,7 @@ menu "Alarm Times"
             config ESP_ALARM_0_1_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
     endmenu
     menu "Monday"
         menu "Wake"
@@ -192,7 +201,7 @@ menu "Alarm Times"
             config ESP_ALARM_1_0_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
         menu "Sleep"
             config ESP_ALARM_1_1_0
                 int "Hour"
@@ -205,7 +214,7 @@ menu "Alarm Times"
             config ESP_ALARM_1_1_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
     endmenu
     menu "Tuesday"
         menu "Wake"
@@ -220,7 +229,7 @@ menu "Alarm Times"
             config ESP_ALARM_2_0_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
         menu "Sleep"
             config ESP_ALARM_2_1_0
                 int "Hour"
@@ -233,7 +242,7 @@ menu "Alarm Times"
             config ESP_ALARM_2_1_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
     endmenu
     menu "Wednesday"
         menu "Wake"
@@ -248,7 +257,7 @@ menu "Alarm Times"
             config ESP_ALARM_3_0_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
         menu "Sleep"
             config ESP_ALARM_3_1_0
                 int "Hour"
@@ -261,7 +270,7 @@ menu "Alarm Times"
             config ESP_ALARM_3_1_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
     endmenu
     menu "Thursday"
         menu "Wake"
@@ -276,7 +285,7 @@ menu "Alarm Times"
             config ESP_ALARM_4_0_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
         menu "Sleep"
             config ESP_ALARM_4_1_0
                 int "Hour"
@@ -289,7 +298,7 @@ menu "Alarm Times"
             config ESP_ALARM_4_1_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
     endmenu
     menu "Friday"
         menu "Wake"
@@ -304,7 +313,7 @@ menu "Alarm Times"
             config ESP_ALARM_5_0_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
         menu "Sleep"
             config ESP_ALARM_5_1_0
                 int "Hour"
@@ -317,7 +326,7 @@ menu "Alarm Times"
             config ESP_ALARM_5_1_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
     endmenu
     menu "Saturday"
         menu "Wake"
@@ -332,7 +341,7 @@ menu "Alarm Times"
             config ESP_ALARM_6_0_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
         menu "Sleep"
             config ESP_ALARM_6_1_0
                 int "Hour"
@@ -345,6 +354,6 @@ menu "Alarm Times"
             config ESP_ALARM_6_1_2
                 int "Second"
                 default 0
-            endmenu
+        endmenu
     endmenu
 endmenu

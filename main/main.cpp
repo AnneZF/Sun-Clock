@@ -6,9 +6,13 @@ void tick(void *pvParameter)
     while (true)
     {
         startTick = xTaskGetTickCount();
-        Led.blink();
-        oLed.drawTime(Sntp.timeNowAscii());
-        oLed.refresh();
+        if (CONFIG_ESP_ONBOARD_LED)
+            Led.blink();
+        if (CONFIG_ESP_OLED)
+        {
+            oLed.drawTime(Sntp.timeNowAscii());
+            oLed.refresh();
+        }
         xTaskDelayUntil(&startTick, pdMS_TO_TICKS(1000));
     }
 }
@@ -122,7 +126,7 @@ void sleep(int ms)
 {
     esp_sleep_enable_timer_wakeup(static_cast<u_int64_t>(ms) * 1000);
     WiFi.stop();
-    oLed.power_down();
+    if (CONFIG_ESP_OLED)oLed.power_down();
     esp_deep_sleep_start();
 }
 
@@ -170,7 +174,7 @@ void eventScheduler(void *pvParameter)
         if (Sntp.timeTo[SLEEP_TIME] > 10000)
         {
             ESP_LOGI("Event Scheduler", "Sunset Start");
-            sunsetStart(5000);
+            if (CONFIG_ESP_LED_STRIP)sunsetStart(5000);
             Sntp.timeTo[SUNSET_END] = 5000;
             Sntp.eventNow = SUNSET_END;
         }
@@ -191,13 +195,13 @@ void eventScheduler(void *pvParameter)
         {
         case SUNRISE_START:
             ESP_LOGI("Scheduler", "Sunrise Start");
-            sunriseStart(Sntp.timeTo[WAKE_TIME] - Sntp.timeTo[SUNRISE_START]);
+            if (CONFIG_ESP_LED_STRIP)sunriseStart(Sntp.timeTo[WAKE_TIME] - Sntp.timeTo[SUNRISE_START]);
 
         case WAKE_TIME:
 
         case SUNRISE_END:
             ESP_LOGI("Scheduler", "Sunrise End");
-            sunriseEnd(Sntp.timeTo[SUNRISE_END] - Sntp.timeTo[WAKE_TIME]);
+            if (CONFIG_ESP_LED_STRIP)sunriseEnd(Sntp.timeTo[SUNRISE_END] - Sntp.timeTo[WAKE_TIME]);
 
         case SUNSET_START:
             if (Sntp.timeTo[SUNSET_START] > 0)
@@ -208,7 +212,7 @@ void eventScheduler(void *pvParameter)
                 xTaskDelayUntil(&startTick, pdMS_TO_TICKS(Sntp.timeTo[SUNSET_START]));
             }
             ESP_LOGI("Scheduler", "Sunset Start");
-            sunsetStart(Sntp.timeTo[SUNSET_HOLD] - Sntp.timeTo[SUNSET_START]);
+            if (CONFIG_ESP_LED_STRIP)sunsetStart(Sntp.timeTo[SUNSET_HOLD] - Sntp.timeTo[SUNSET_START]);
 
         case SUNSET_HOLD:
             if (Sntp.timeTo[SUNSET_END] > 0)
@@ -221,7 +225,7 @@ void eventScheduler(void *pvParameter)
 
         case SUNSET_END:
             ESP_LOGI("Scheduler", "Sunset End");
-            sunsetEnd(Sntp.timeTo[SLEEP_TIME] - Sntp.timeTo[SUNSET_END]);
+            if (CONFIG_ESP_LED_STRIP)sunsetEnd(Sntp.timeTo[SLEEP_TIME] - Sntp.timeTo[SUNSET_END]);
 
         case SLEEP_TIME:
             ESP_LOGI("Scheduler", "Sleeping till Calculation Time...");
@@ -238,15 +242,15 @@ void eventScheduler(void *pvParameter)
 void setup(void)
 {
     esp_event_loop_create_default();
-    if (!Led.ledState())
+    if (CONFIG_ESP_ONBOARD_LED && !Led.ledState())
     {
         Led.init();
     }
-    if (!Leds.ledState())
+    if (CONFIG_ESP_LED_STRIP && !Leds.ledState())
     {
         Leds.init();
     }
-    if (!oLed.oled_state())
+    if (CONFIG_ESP_OLED && !oLed.oled_state())
     {
         oLed.init();
     }
