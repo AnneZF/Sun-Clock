@@ -126,6 +126,11 @@ void sleep(int ms)
 {
     esp_sleep_enable_timer_wakeup(static_cast<u_int64_t>(ms) * 1000);
     WiFi.stop();
+    if (CONFIG_ESP_LED_STRIP)
+    {
+        Leds.clear();
+        Leds.send();
+    }
     if (CONFIG_ESP_OLED)
         oLed.power_down();
     esp_deep_sleep_start();
@@ -134,7 +139,7 @@ void sleep(int ms)
 void eventScheduler(void *pvParameter)
 {
     TickType_t startTick;
-    switch (Sntp.eventNow)
+    switch (Sntp.eventNow) // find current event on startup
     {
     case SUNRISE_START:
         ESP_LOGI("Event Scheduler", "Sleeping till Sunrise...");
