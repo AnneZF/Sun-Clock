@@ -49,7 +49,7 @@ static void tick(void *pvParameter);
 
 /**
  * @brief Sets LED Strip
- * 
+ *
  * @param[in] setter choose from:
  *  - setPixelRGB(u_int16_t pixel, float r, float g, float b)
  *  - setPixelHSV(u_int16_t pixel, float h, float s, float v)
@@ -68,41 +68,41 @@ static void setColourRange(void (*setter)(u_int16_t, float, float, float), float
 
 /**
  * @brief LED Strip at end of Sunrise
- * 
+ *
  * @param[in] ms Duration of event in ms
  */
 static void sunriseStart(int ms);
 
 /**
  * @brief LED Strip at end of Sunrise
- * 
+ *
  * @param[in] ms Duration of event in ms
  */
 static void sunriseEnd(int ms);
 
 /**
  * @brief LED Strip at start of Sunset
- * 
+ *
  * @param[in] ms Duration of event in ms
  */
 static void sunsetStart(int ms);
 
 /**
  * @brief LED Strip at end of Sunset
- * 
+ *
  * @param[in] ms Duration of event in ms
  */
 static void sunsetEnd(int ms);
 
 /**
  * @brief Turns off peripherals and puts ESP32 to sleep
- * 
+ *
  * @param[in] ms Duration of event in ms
  */
 static void sleep(int ms);
 
 /**
- * @brief Schedules events to be run
+ * @brief Schedules when events are run
  */
 static void eventScheduler(void *pvParameter);
 
