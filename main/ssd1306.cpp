@@ -62,7 +62,7 @@ namespace SSD1306
         i2c_master_write_byte(cmd, OLED_CMD_SET_PRECHARGE, true);
         i2c_master_write_byte(cmd, 0xF1, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_COM_PIN_MAP, true);
-        i2c_master_write_byte(cmd, 0x02, true); // 0x22
+        i2c_master_write_byte(cmd, 0x02, true);                        // 0x22
         i2c_master_write_byte(cmd, OLED_CMD_SET_VCOMH_DESELCT, true);
         i2c_master_write_byte(cmd, 0x40, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_CHARGE_PUMP, true);
@@ -198,6 +198,7 @@ namespace SSD1306
 
     void oled::drawTime(const char *SNTP_time)
     {
+        // SNTP_time produces ddd_mmm_DD_HH:MM_SS_YYYY
         draw_7seg(0, 0, SNTP_time[11], 32, 1); // hour
         draw_7seg(20, 0, SNTP_time[12], 32, 1);
         draw_7seg(40, 0, SNTP_time[14], 32, 1); // minute
