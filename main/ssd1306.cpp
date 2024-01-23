@@ -51,7 +51,7 @@ namespace SSD1306
         i2c_master_write_byte(cmd, OLED_CMD_DISPLAY_OFF, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_DISPLAY_START_LINE, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_CONTRAST, true);
-        i2c_master_write_byte(cmd, 0xFF, true);
+        i2c_master_write_byte(cmd, 0x80, true);
         i2c_master_write_byte(cmd, OLED_CMD_SET_SEGMENT_REMAP_0, true); // OLED_CMD_SET_SEGMENT_REMAP_0
         i2c_master_write_byte(cmd, 0xC8, true);                         // 0xC0
         i2c_master_write_byte(cmd, OLED_CMD_DISPLAY_NORMAL, true);
@@ -174,12 +174,12 @@ namespace SSD1306
     void oled::draw_char(uint8_t xPos, uint8_t yPos, uint8_t cChar, uint8_t cWidth, bool point)
     {
         uint8_t cTemp, yPos0 = yPos;
-        for (uint8_t i = 0; i < (cWidth == 32 ? sizeof(c_chFont1608[0]) : sizeof(c_chFont1206[0])); i++)
+        for (uint8_t i = 0; i < (cWidth == 16 ? sizeof(cFont1608[0]) : sizeof(cFont1206[0])); i++)
         {
             if (cWidth == 16)
-                cTemp = c_chFont1608[cChar - ' '][i];
+                cTemp = cFont1608[cChar - ' '][i];
             else
-                cTemp = c_chFont1206[cChar - ' '][i];
+                cTemp = cFont1206[cChar - ' '][i];
             if (!point)
                 cTemp = ~cTemp;
             for (uint8_t j = 0; j < 8; j++)
@@ -204,13 +204,13 @@ namespace SSD1306
         draw_7seg(60, 0, SNTP_time[15], 32, 1);
         draw_7seg(80, 0, SNTP_time[17], 16, 1); // second
         draw_7seg(90, 0, SNTP_time[18], 16, 1);
-        draw_char(104, 0, SNTP_time[0], 16, 1); // day
-        draw_char(112, 0, SNTP_time[1], 16, 1);
+        draw_char(100, 0, SNTP_time[0], 16, 1); // day
+        draw_char(110, 0, SNTP_time[1], 16, 1);
         draw_char(120, 0, SNTP_time[2], 16, 1);
-        draw_char(84, 16, SNTP_time[8], 16, 1); // date
-        draw_char(94, 16, SNTP_time[9], 16, 1);
-        draw_char(104, 16, SNTP_time[4], 16, 1); // month
-        draw_char(112, 16, SNTP_time[5], 16, 1);
+        draw_char(80, 16, SNTP_time[8], 16, 1); // date
+        draw_char(90, 16, SNTP_time[9], 16, 1);
+        draw_char(100, 16, SNTP_time[4], 16, 1); // month
+        draw_char(110, 16, SNTP_time[5], 16, 1);
         draw_char(120, 16, SNTP_time[6], 16, 1);
     }
 

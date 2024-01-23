@@ -37,7 +37,7 @@ void sunriseStart(int ms)
     float h = 240;
     float dH = 180.0 / d; // blue to yellow
     float l = 0.001;
-    float dL = 0.999 / d;
+    float dL = 0.949 / d;
     float a = 60;
     float dA = -30.0 / d;
     for (int i = 0; i < d; i++)
@@ -59,8 +59,8 @@ void sunriseEnd(int ms)
 {
     TickType_t startTick;
     float d = 1.0 * ms / CONFIG_ESP_LED_REFRESH_MS;
-    float v = 1;
-    float dV = -0.999 / d;
+    float v = 0.95;
+    float dV = -0.95 / d;
     for (int i = 0; i < d; i++)
     {
         startTick = xTaskGetTickCount();
