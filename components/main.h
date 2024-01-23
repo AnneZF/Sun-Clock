@@ -13,9 +13,9 @@
 #include "led_blink.h"
 #include "ssd1306.h"
 
-// #define test
+#define test
 #ifdef test
-#define LEDS 48
+#define LEDS 12
 #else
 #define LEDS CONFIG_ESP_LED_NUMBERS
 #endif
