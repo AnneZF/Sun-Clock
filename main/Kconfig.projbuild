@@ -67,7 +67,7 @@ endmenu
 menu "Date/Time Configuration"
     config ESP_TIMEZONE
         string "Time Zone"
-        default ""
+        default "GMT0"
         help
             See "https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv" for list of setenv configurations by country.
 
@@ -79,11 +79,11 @@ menu "Date/Time Configuration"
 
     config ESP_LONGITUDE
         string "Longitude"
-        default ""
+        default "0"
     
     config ESP_LATITUDE
         string "Latitude"
-        default ""
+        default "0"
 endmenu
 
 menu "Onboard LED Blink"
@@ -102,7 +102,7 @@ endmenu
 menu "LED Strip Configuration"
     config ESP_LED_STRIP
         bool "Enable LED Strip"
-        default y
+        default n
     
     if ESP_LED_STRIP
         config ESP_LED_STRIP_GPIO_NUM
@@ -134,7 +134,7 @@ endmenu
 menu "OLED Display"
     config ESP_OLED
         bool "Enable OLED Display"
-        default y
+        default n
 
     if ESP_OLED
         config ESP_OLED_SCL_GPIO_NUM
