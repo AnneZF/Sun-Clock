@@ -141,54 +141,54 @@ void eventScheduler(void *pvParameter)
     TickType_t startTick;
     switch (Sntp.eventNow) // find current event on startup
     {
-    case SUNRISE_START:
+    case SNTP::Sntp::eventTime_t::SUNRISE_START:
         ESP_LOGI("Event Scheduler", "Sleeping till Sunrise...");
-        sleep(Sntp.timeTo[SUNRISE_START]);
+        sleep(Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNRISE_START]);
         break;
 
-    case WAKE_TIME:
-        Sntp.timeTo[SUNRISE_START] = 0;
-        Sntp.eventNow = SUNRISE_START;
+    case SNTP::Sntp::eventTime_t::WAKE_TIME:
+        Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNRISE_START] = 0;
+        Sntp.eventNow = SNTP::Sntp::eventTime_t::SUNRISE_START;
         break;
 
-    case SUNRISE_END:
-        if (Sntp.timeTo[SUNRISE_END] > 5000)
+    case SNTP::Sntp::eventTime_t::SUNRISE_END:
+        if (Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNRISE_END] > 5000)
         {
-            Sntp.timeTo[SUNRISE_START] = 0;
-            Sntp.timeTo[WAKE_TIME] = 5000;
-            Sntp.eventNow = SUNRISE_START;
+            Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNRISE_START] = 0;
+            Sntp.timeTo[SNTP::Sntp::eventTime_t::WAKE_TIME] = 5000;
+            Sntp.eventNow = SNTP::Sntp::eventTime_t::SUNRISE_START;
         }
         else
-            Sntp.eventNow = SUNSET_START;
+            Sntp.eventNow = SNTP::Sntp::eventTime_t::SUNSET_START;
         break;
 
-    case SUNSET_START:
+    case SNTP::Sntp::eventTime_t::SUNSET_START:
         break;
 
-    case SUNSET_HOLD:
-        Sntp.timeTo[SUNSET_START] = 0;
-        Sntp.eventNow = SUNSET_START;
+    case SNTP::Sntp::eventTime_t::SUNSET_HOLD:
+        Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_START] = 0;
+        Sntp.eventNow = SNTP::Sntp::eventTime_t::SUNSET_START;
         break;
 
-    case SUNSET_END:
-        Sntp.timeTo[SUNSET_START] = 0;
-        Sntp.timeTo[SUNSET_HOLD] = 5000;
-        Sntp.eventNow = SUNSET_START;
+    case SNTP::Sntp::eventTime_t::SUNSET_END:
+        Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_START] = 0;
+        Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_HOLD] = 5000;
+        Sntp.eventNow = SNTP::Sntp::eventTime_t::SUNSET_START;
         break;
 
-    case SLEEP_TIME:
-        if (Sntp.timeTo[SLEEP_TIME] > 10000)
+    case SNTP::Sntp::eventTime_t::SLEEP_TIME:
+        if (Sntp.timeTo[SNTP::Sntp::eventTime_t::SLEEP_TIME] > 10000)
         {
             ESP_LOGI("Event Scheduler", "Sunset Start");
             if (CONFIG_ESP_LED_STRIP)
                 sunsetStart(5000);
-            Sntp.timeTo[SUNSET_END] = 5000;
-            Sntp.eventNow = SUNSET_END;
+            Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_END] = 5000;
+            Sntp.eventNow = SNTP::Sntp::eventTime_t::SUNSET_END;
         }
         break;
 
-    case CALCULATE:
-        Sntp.eventNow = SLEEP_TIME;
+    case SNTP::Sntp::eventTime_t::CALCULATE:
+        Sntp.eventNow = SNTP::Sntp::eventTime_t::SLEEP_TIME;
         break;
 
     default:
@@ -198,52 +198,52 @@ void eventScheduler(void *pvParameter)
 
     while (true)
     {
-        switch (Sntp.eventNow)
+        switch (Sntp.eventNow) // fall through to next event after each case is completed
         {
-        case SUNRISE_START:
+        case SNTP::Sntp::eventTime_t::SUNRISE_START:
             ESP_LOGI("Scheduler", "Sunrise Start");
             if (CONFIG_ESP_LED_STRIP)
-                sunriseStart(Sntp.timeTo[WAKE_TIME] - Sntp.timeTo[SUNRISE_START]);
+                sunriseStart(Sntp.timeTo[SNTP::Sntp::eventTime_t::WAKE_TIME] - Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNRISE_START]);
 
-        case WAKE_TIME:
+        case SNTP::Sntp::eventTime_t::WAKE_TIME:
 
-        case SUNRISE_END:
+        case SNTP::Sntp::eventTime_t::SUNRISE_END:
             ESP_LOGI("Scheduler", "Sunrise End");
             if (CONFIG_ESP_LED_STRIP)
-                sunriseEnd(Sntp.timeTo[SUNRISE_END] - Sntp.timeTo[WAKE_TIME]);
+                sunriseEnd(Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNRISE_END] - Sntp.timeTo[SNTP::Sntp::eventTime_t::WAKE_TIME]);
 
-        case SUNSET_START:
-            if (Sntp.timeTo[SUNSET_START] > 0)
+        case SNTP::Sntp::eventTime_t::SUNSET_START:
+            if (Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_START] > 0)
             {
                 ESP_LOGI("Scheduler", "Waiting for Sunset Start");
                 Sntp.eventCalculator();
                 startTick = xTaskGetTickCount();
-                xTaskDelayUntil(&startTick, pdMS_TO_TICKS(Sntp.timeTo[SUNSET_START]));
+                xTaskDelayUntil(&startTick, pdMS_TO_TICKS(Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_START]));
             }
             ESP_LOGI("Scheduler", "Sunset Start");
             if (CONFIG_ESP_LED_STRIP)
-                sunsetStart(Sntp.timeTo[SUNSET_HOLD] - Sntp.timeTo[SUNSET_START]);
+                sunsetStart(Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_HOLD] - Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_START]);
 
-        case SUNSET_HOLD:
-            if (Sntp.timeTo[SUNSET_END] > 0)
+        case SNTP::Sntp::eventTime_t::SUNSET_HOLD:
+            if (Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_END] > 0)
             {
                 ESP_LOGI("Scheduler", "Sunset Hold");
                 Sntp.eventCalculator();
                 startTick = xTaskGetTickCount();
-                xTaskDelayUntil(&startTick, pdMS_TO_TICKS(Sntp.timeTo[SUNSET_END]));
+                xTaskDelayUntil(&startTick, pdMS_TO_TICKS(Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_END]));
             }
 
-        case SUNSET_END:
+        case SNTP::Sntp::eventTime_t::SUNSET_END:
             ESP_LOGI("Scheduler", "Sunset End");
             if (CONFIG_ESP_LED_STRIP)
-                sunsetEnd(Sntp.timeTo[SLEEP_TIME] - Sntp.timeTo[SUNSET_END]);
+                sunsetEnd(Sntp.timeTo[SNTP::Sntp::eventTime_t::SLEEP_TIME] - Sntp.timeTo[SNTP::Sntp::eventTime_t::SUNSET_END]);
 
-        case SLEEP_TIME:
+        case SNTP::Sntp::eventTime_t::SLEEP_TIME:
             ESP_LOGI("Scheduler", "Sleeping till Calculation Time...");
             Sntp.eventCalculator();
-            sleep(Sntp.timeTo[CALCULATE]);
+            sleep(Sntp.timeTo[SNTP::Sntp::eventTime_t::CALCULATE]);
 
-        case CALCULATE:
+        case SNTP::Sntp::eventTime_t::CALCULATE:
         default:
             vTaskDelay(60 * 60 * 1000);
         }

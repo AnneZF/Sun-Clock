@@ -38,7 +38,7 @@ namespace SNTP
 
             esp_sntp_init();
 
-            ESP_LOGI("SNTP", "Initialised.");
+            ESP_LOGI("SNTP", "Initialised");
 
             while (SNTP_SYNC_STATUS_COMPLETED != sntp_get_sync_status())
             {
@@ -47,7 +47,7 @@ namespace SNTP
 
             _running = true;
 
-            ESP_LOGI("SNTP", "Synced.");
+            ESP_LOGI("SNTP", "Synced");
         }
         return _running ? ESP_OK : ESP_FAIL;
     }
@@ -120,9 +120,7 @@ namespace SNTP
         double cosH = (cos(RAD(zenith)) - sinDec * sin(RAD(std::stod(CONFIG_ESP_LATITUDE)))) / (cosDec * cos(RAD(std::stod(CONFIG_ESP_LATITUDE))));
 
         if (cosH > 1 || cosH < -1)
-        { // >1 -> never rise, <-1 -> never set
-            return -1;
-        }
+            return -1; // >1 -> never rise, <-1 -> never set
 
         return LIM((isSunrise ? (360.0 - DEG(acos(cosH))) : DEG(acos(cosH))) / 15.0 + sunRA - 0.06571 * time - 6.622 - longInHour, 24.0);
     }
@@ -155,35 +153,35 @@ namespace SNTP
     void Sntp::eventCalculator()
     {
         int wday = getWDay();
-        timeTo[1] = msToLocTime(wakeTime[wday][0], wakeTime[wday][1], wakeTime[wday][2]);
-        timeTo[2] = msToSunEvent(true);
-        timeTo[3] = msToSunEvent(false);
-        timeTo[4] = msToSunEvent(false, false);
-        timeTo[6] = msToLocTime(sleepTime[wday][0], sleepTime[wday][1], sleepTime[wday][2]);
-        timeTo[7] = msToLocTime(2);
+        timeTo[WAKE_TIME] = msToLocTime(wakeTime[wday][0], wakeTime[wday][1], wakeTime[wday][2]);
+        timeTo[SUNRISE_END] = msToSunEvent(true);
+        timeTo[SUNSET_START] = msToSunEvent(false);
+        timeTo[SUNSET_HOLD] = msToSunEvent(false, false);
+        timeTo[SLEEP_TIME] = msToLocTime(sleepTime[wday][0], sleepTime[wday][1], sleepTime[wday][2]);
+        timeTo[CALCULATE] = msToLocTime(2);
 
-        if (timeTo[2] < timeTo[1] + 30 * 60 * 1000)
-            timeTo[2] = timeTo[1] + 30 * 60 * 1000;
+        if (timeTo[SUNRISE_END] < timeTo[WAKE_TIME] + 30 * 60 * 1000)
+            timeTo[SUNRISE_END] = timeTo[WAKE_TIME] + 30 * 60 * 1000;
 
-        timeTo[0] = timeTo[1] - 30 * 60 * 1000;
+        timeTo[SUNRISE_START] = timeTo[WAKE_TIME] - 30 * 60 * 1000;
 
-        if (timeTo[4] == -1)
-            timeTo[4] = timeTo[3] + 30 * 60 * 1000;
+        if (timeTo[SUNSET_HOLD] == -1)
+            timeTo[SUNSET_HOLD] = timeTo[SUNSET_START] + 30 * 60 * 1000;
 
-        timeTo[5] = timeTo[6] - 30 * 60 * 1000;
+        timeTo[SUNSET_END] = timeTo[SLEEP_TIME] - 30 * 60 * 1000;
 
-        if (timeTo[7] < 0)
-            timeTo[7] = msToLocTime(26);
+        if (timeTo[CALCULATE] < 0)
+            timeTo[CALCULATE] = msToLocTime(26);
 
-        ESP_LOGI("SNTP", "Calculated Schedule (ms)\n\nSunrise Start:\t%- 10i\nSunrise End:\t%- 10i\nSunset Start:\t%- 10i\nSunset Hold:\t%- 10i\nSunset End:\t%- 10i\nRecalculation:\t%- 10i\n\n", timeTo[0], timeTo[2], timeTo[3], timeTo[4], timeTo[5], timeTo[7]);
+        ESP_LOGI("SNTP", "Calculated Schedule (ms)\n\nSunrise Start:\t%- 10i\nSunrise End:\t%- 10i\nSunset Start:\t%- 10i\nSunset Hold:\t%- 10i\nSunset End:\t%- 10i\nRecalculation:\t%- 10i\n\n", timeTo[SUNRISE_START], timeTo[SUNRISE_END], timeTo[SUNSET_START], timeTo[SUNSET_HOLD], timeTo[SUNSET_END], timeTo[CALCULATE]);
 
         for (int i = 0; i < 8; i++)
         {
             if (timeTo[i] > 0)
             {
-                if (i == 0 && timeTo[7] < timeTo[0])
+                if (i == SUNRISE_START && timeTo[CALCULATE] < timeTo[SUNRISE_START])
                 {
-                    eventNow = 7;
+                    eventNow = CALCULATE;
                     return;
                 }
                 eventNow = i;
