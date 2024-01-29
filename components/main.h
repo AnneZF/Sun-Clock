@@ -20,18 +20,6 @@
 #define LEDS CONFIG_ESP_LED_NUMBERS
 #endif
 
-typedef enum
-{
-    SUNRISE_START = 0,
-    WAKE_TIME = 1,
-    SUNRISE_END = 2,
-    SUNSET_START = 3,
-    SUNSET_HOLD = 4,
-    SUNSET_END = 5,
-    SLEEP_TIME = 6,
-    CALCULATE = 7,
-} eventTime_t;
-
 WIFI::WiFi::state_e wifiState{WIFI::WiFi::state_e::NOT_INITIALISED};
 WIFI::WiFi WiFi;
 SNTP::Sntp Sntp;
@@ -51,10 +39,10 @@ static void tick(void *pvParameter);
  * @brief Sets LED Strip
  *
  * @param[in] setter choose from:
- *  - setPixelRGB(u_int16_t pixel, float r, float g, float b)
- *  - setPixelHSV(u_int16_t pixel, float h, float s, float v)
- *  - setPixelHSL(u_int16_t pixel, float h, float s, float l)
- *  - setPixelHSI(u_int16_t pixel, float h, float s, float i)
+ *  - LED::Led setPixelRGB(u_int16_t pixel, float r, float g, float b)
+ *  - LED::Led setPixelHSV(u_int16_t pixel, float h, float s, float v)
+ *  - LED::Led setPixelHSL(u_int16_t pixel, float h, float s, float l)
+ *  - LED::Led setPixelHSI(u_int16_t pixel, float h, float s, float i)
  * @param[in] v0 first initial value to be input into setter (r/h)
  * @param[in] v1 second initial value to be input into setter (g/s)
  * @param[in] v2 third initial value to be input into setter (b/v/l/i)
