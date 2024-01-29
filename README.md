@@ -6,17 +6,15 @@ The device polls for time using NTP, and can accurately calculate sunrise and su
 
 ## Installation
 
-1. Create a new ESP-IDF sample project in Visual Studios
-2. Replace all files from `main` folder in the sample project with files from `main` in this project
-3. Replace `CMakeLists.txt`
-4. Add `components` folder
-5. Open *settings* (bottom row of window) and configure accordingly. (Tip: To find your Longitude and Latitude, open [Google Maps](https://www.google.com/maps), search for your location and right-click on the exact point to display the Latitude and Longitude.) 
+1. Create a new ESP-IDF sample project
+2. Copy files into the project folder
+3. Open *settings* (bottom row of window) and configure accordingly.
+
+Tips:
+- To find your Longitude and Latitude, open [Google Maps](https://www.google.com/maps), search for your location and right-click on the exact point to display the Latitude and Longitude.
+- Change `RTC Clock Source` to `Internal 8.5MHz oscillator, divided by 256 (~33kHz)` for more accurate oscillator cycles
 
 ## References
-
-*WiFi and SNTP:*
-
-- [roughleaf](https://embeddedtutorials.com/)
 
 *LED Strip (WS2812):*
 
@@ -29,3 +27,11 @@ The device polls for time using NTP, and can accurately calculate sunrise and su
 - [nopnop2002](https://github.com/nopnop2002/esp-idf-ssd1306/tree/master)
 
 - [Datasheet](https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf)
+
+*Sunrise/Sunset Algorithm:*
+
+- [Ed Williams' Aviation](https://edwilliams.org/sunrise_sunset_algorithm.htm)
+
+*WiFi and SNTP:*
+
+- [roughleaf](https://embeddedtutorials.com/)
